@@ -1,4 +1,5 @@
 /* styles.css - Astria Nano Banana Pro V2 Photoshop Theme */
+/* Fully Responsive & Fluid for Adobe Photoshop UXP (200px to 800px+ panel width) */
 
 :root {
   --bg-darkest: #121212;
@@ -6,6 +7,7 @@
   --bg-panel: #1f1f1f;
   --bg-card: #252525;
   --bg-card-hover: #2c2c2c;
+  --bg-card-active: #333333;
   --bg-input: #161616;
   --bg-input-focus: #111111;
   --border-subtle: #2e2e2e;
@@ -35,6 +37,13 @@
   -webkit-font-smoothing: antialiased;
 }
 
+html, body {
+  width: 100%;
+  min-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: var(--font-family);
   font-size: 11.5px;
@@ -45,6 +54,14 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 10px;
+}
+
+.app-wrapper {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Custom Scrollbar */
@@ -71,14 +88,16 @@ body {
   align-items: center;
   justify-content: space-between;
   padding-bottom: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 9px;
   border-bottom: 1px solid var(--border-subtle);
+  width: 100%;
 }
 
 .brand-group {
   display: flex;
   align-items: center;
   gap: 7px;
+  min-width: 0;
 }
 
 .brand-logo-badge {
@@ -97,6 +116,7 @@ body {
 .brand-text {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .brand-title {
@@ -104,6 +124,9 @@ body {
   font-weight: 700;
   letter-spacing: 0.2px;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .brand-subtitle {
@@ -112,12 +135,16 @@ body {
   letter-spacing: 0.5px;
   color: var(--banana-yellow);
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .btn-icon-header {
@@ -140,6 +167,11 @@ body {
   color: #ffffff;
 }
 
+.btn-icon-header:active {
+  transform: scale(0.94);
+  background: var(--bg-card-active);
+}
+
 /* =========================================
    COLLAPSIBLE SETTINGS DRAWER (API KEY)
    ========================================= */
@@ -148,9 +180,10 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border-active);
   border-radius: var(--radius-md);
-  padding: 10px;
-  margin-bottom: 10px;
-  animation: slideDown 0.18s ease;
+  padding: 9px 10px;
+  margin-bottom: 9px;
+  animation: slideDown 0.16s ease-out;
+  width: 100%;
 }
 
 .settings-drawer.open {
@@ -167,10 +200,34 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-secondary);
+}
+
+.settings-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.save-key-badge {
+  font-size: 9px;
+  color: var(--status-green);
+  opacity: 0;
+  transition: opacity 0.2s;
+  font-weight: 700;
+}
+
+.get-key-link {
+  color: var(--banana-yellow);
+  text-decoration: none;
+  font-size: 9.5px;
+  font-weight: 600;
+}
+.get-key-link:hover {
+  text-decoration: underline;
 }
 
 /* =========================================
@@ -182,7 +239,9 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 2px;
-  margin-bottom: 10px;
+  margin-bottom: 9px;
+  width: 100%;
+  gap: 2px;
 }
 
 .mode-tab {
@@ -192,21 +251,38 @@ body {
   color: var(--text-secondary);
   font-size: 10.5px;
   font-weight: 600;
-  padding: 5px 4px;
+  padding: 6px 3px;
   border-radius: var(--radius-xs);
   cursor: pointer;
   text-align: center;
   transition: var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: none;
 }
 
 .mode-tab:hover {
   color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mode-tab:active {
+  transform: scale(0.97);
 }
 
 .mode-tab.active {
   background: var(--bg-input);
   color: var(--banana-yellow);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Tab responsive label switching */
+.tab-label-short {
+  display: none;
+}
+.tab-label-full {
+  display: inline;
 }
 
 /* =========================================
@@ -217,11 +293,19 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
-  margin-bottom: 10px;
+  margin-bottom: 9px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  cursor: pointer;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.status-bar-card:hover {
+  border-color: var(--border-active);
+  background: var(--bg-card-hover);
 }
 
 .status-left {
@@ -230,6 +314,7 @@ body {
   gap: 7px;
   overflow: hidden;
   flex: 1;
+  min-width: 0;
 }
 
 .status-dot {
@@ -258,6 +343,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .status-title {
@@ -288,11 +374,16 @@ body {
   align-items: center;
   justify-content: center;
   transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .btn-refresh:hover {
-  background: var(--bg-card-hover);
+  background: var(--bg-card-active);
   color: #ffffff;
+}
+
+.btn-refresh:active {
+  transform: rotate(90deg);
 }
 
 /* =========================================
@@ -300,6 +391,7 @@ body {
    ========================================= */
 .form-group {
   margin-bottom: 9px;
+  width: 100%;
 }
 
 .form-label-row {
@@ -307,6 +399,8 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
+  gap: 4px;
+  width: 100%;
 }
 
 .form-label {
@@ -315,6 +409,15 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.label-optional {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
 }
 
 .label-action-btn {
@@ -327,6 +430,8 @@ body {
   padding: 1px 4px;
   border-radius: 4px;
   transition: var(--transition);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .label-action-btn:hover {
@@ -334,19 +439,24 @@ body {
   color: #ffffff;
 }
 
+.label-action-btn:active {
+  transform: scale(0.95);
+}
+
 .input-text,
 .select-input,
 .textarea-input {
   width: 100%;
   background: var(--bg-input);
-  color: #ffffff;
+  color: #ffffff !important;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-family: inherit;
   outline: none;
   transition: var(--transition);
+  box-sizing: border-box;
 }
 
 .input-text:hover,
@@ -364,7 +474,12 @@ body {
   box-shadow: 0 0 0 1px var(--border-focus);
 }
 
-/* Ensure options render crisply in UXP */
+/* Ensure options render reliably across UXP platforms */
+.select-input {
+  height: 30px;
+  cursor: pointer;
+}
+
 .select-input option {
   background-color: #242424 !important;
   color: #ffffff !important;
@@ -373,7 +488,7 @@ body {
 
 .textarea-input {
   resize: vertical;
-  min-height: 52px;
+  min-height: 50px;
   line-height: 1.4;
 }
 
@@ -382,10 +497,11 @@ body {
   font-style: normal;
 }
 
-/* Custom Model Row */
+/* Custom Model Container */
 .custom-model-container {
   margin-top: 5px;
   display: none;
+  width: 100%;
 }
 .custom-model-container.visible {
   display: block;
@@ -395,9 +511,11 @@ body {
 .row {
   display: flex;
   gap: 6px;
+  width: 100%;
 }
 .col {
   flex: 1;
+  min-width: 0;
 }
 
 /* Password Input */
@@ -405,9 +523,10 @@ body {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 .password-wrap .input-text {
-  padding-right: 26px;
+  padding-right: 28px;
 }
 .btn-toggle-eye {
   position: absolute;
@@ -421,9 +540,13 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-xs);
+  transition: var(--transition);
 }
 .btn-toggle-eye:hover {
   color: #ffffff;
+}
+.btn-toggle-eye:active {
+  transform: scale(0.9);
 }
 
 /* =========================================
@@ -434,6 +557,7 @@ body {
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 5px;
+  width: 100%;
 }
 
 .chip-tag {
@@ -445,12 +569,20 @@ body {
   border-radius: 12px;
   cursor: pointer;
   transition: var(--transition);
+  white-space: nowrap;
+  user-select: none;
 }
 
 .chip-tag:hover {
   background: var(--bg-card-hover);
   border-color: var(--border-active);
   color: var(--banana-yellow);
+}
+
+.chip-tag:active {
+  transform: scale(0.95);
+  background: var(--banana-dark);
+  color: #000000;
 }
 
 /* =========================================
@@ -460,15 +592,20 @@ body {
   border: 1px dashed var(--border-subtle);
   border-radius: var(--radius-sm);
   background: var(--bg-input);
-  padding: 8px 10px;
+  padding: 7px 10px;
   text-align: center;
   cursor: pointer;
   transition: var(--transition);
+  width: 100%;
 }
 
 .reference-slot-card:hover {
   border-color: var(--banana-yellow);
   background: var(--bg-card);
+}
+
+.reference-slot-card:active {
+  transform: scale(0.99);
 }
 
 .ref-slot-content {
@@ -482,12 +619,16 @@ body {
   display: flex;
   flex-direction: column;
   text-align: left;
+  min-width: 0;
 }
 
 .ref-slot-title {
   font-size: 10.5px;
   font-weight: 600;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ref-slot-sub {
@@ -503,6 +644,7 @@ body {
   border-radius: var(--radius-sm);
   padding: 4px;
   text-align: center;
+  width: 100%;
 }
 
 .ref-preview-img {
@@ -522,13 +664,14 @@ body {
   border: none;
   color: #ffffff;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  font-size: 9px;
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: var(--transition);
 }
 
 .btn-remove-ref:hover {
@@ -546,24 +689,34 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
-  margin-top: 6px;
+  margin-top: 4px;
   margin-bottom: 9px;
+  width: 100%;
+  gap: 6px;
 }
 
 .toggle-label-wrap {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  flex: 1;
 }
 
 .toggle-main-label {
   font-size: 10.5px;
   font-weight: 600;
   color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .toggle-sub-label {
   font-size: 9px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .switch {
@@ -572,6 +725,7 @@ body {
   width: 30px;
   height: 16px;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .switch input {
@@ -613,10 +767,11 @@ input:checked + .slider:before {
    PRIMARY GENERATE BUTTON
    ========================================= */
 .action-box {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
 }
 
 .btn-generate-main {
@@ -636,6 +791,7 @@ input:checked + .slider:before {
   gap: 7px;
   box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
   transition: var(--transition);
+  user-select: none;
 }
 
 .btn-generate-main:hover:not(:disabled) {
@@ -645,7 +801,7 @@ input:checked + .slider:before {
 }
 
 .btn-generate-main:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: scale(0.99);
 }
 
 .btn-generate-main:disabled {
@@ -654,12 +810,6 @@ input:checked + .slider:before {
   color: #777777;
   cursor: not-allowed;
   box-shadow: none;
-}
-
-.btn-icon-svg {
-  width: 14px;
-  height: 14px;
-  fill: currentColor;
 }
 
 /* Spinner */
@@ -728,6 +878,7 @@ input:checked + .slider:before {
   text-align: center;
   font-size: 9px;
   color: var(--text-tertiary);
+  width: 100%;
 }
 
 /* =========================================
@@ -753,9 +904,9 @@ input:checked + .slider:before {
   border: 1px solid var(--border-active);
   border-radius: var(--radius-md);
   width: 100%;
-  max-width: 360px;
-  height: 88vh;
-  max-height: 480px;
+  max-width: 380px;
+  height: 86vh;
+  max-height: 500px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
@@ -785,10 +936,14 @@ input:checked + .slider:before {
   font-size: 14px;
   padding: 2px 6px;
   border-radius: var(--radius-xs);
+  transition: var(--transition);
 }
 .btn-close-modal:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #ffffff;
+}
+.btn-close-modal:active {
+  transform: scale(0.9);
 }
 
 .modal-search-bar {
@@ -806,6 +961,7 @@ input:checked + .slider:before {
   color: #ffffff;
   font-size: 11px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .modal-search-input:focus {
@@ -834,6 +990,12 @@ input:checked + .slider:before {
   border-radius: 10px;
   cursor: pointer;
   white-space: nowrap;
+  transition: var(--transition);
+}
+
+.filter-pill:hover {
+  color: #ffffff;
+  border-color: var(--border-active);
 }
 
 .filter-pill.active {
@@ -870,6 +1032,10 @@ input:checked + .slider:before {
   background: var(--bg-card-hover);
 }
 
+.model-item-card:active {
+  transform: scale(0.99);
+}
+
 .model-item-card.selected {
   border-color: var(--banana-gold);
   background: rgba(245, 158, 11, 0.12);
@@ -900,4 +1066,101 @@ input:checked + .slider:before {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
   flex-shrink: 0;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN BREAKPOINTS (UXP PANELS)
+   ========================================= */
+
+/* Compact Side Dock (< 320px) */
+@media (max-width: 320px) {
+  body {
+    padding: 8px 6px;
+  }
+
+  .model-ratio-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tab-label-full {
+    display: none;
+  }
+
+  .tab-label-short {
+    display: inline;
+  }
+
+  .mode-tab {
+    font-size: 10px;
+    padding: 5px 2px;
+  }
+
+  .btn-generate-main {
+    padding: 8px 10px;
+    font-size: 11.5px;
+  }
+}
+
+/* Ultra Compact Dock (< 270px) */
+@media (max-width: 270px) {
+  body {
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+
+  .brand-title {
+    font-size: 11px;
+  }
+
+  .brand-subtitle {
+    font-size: 8px;
+  }
+
+  .brand-logo-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+  }
+
+  .chip-tag {
+    font-size: 9px;
+    padding: 2px 5px;
+  }
+
+  .toggle-main-label {
+    font-size: 10px;
+  }
+
+  .toggle-sub-label {
+    display: none;
+  }
+
+  .status-title {
+    font-size: 9.5px;
+  }
+
+  .status-desc {
+    font-size: 8.5px;
+  }
+}
+
+/* Wide Dock or Floating Window (> 420px) */
+@media (min-width: 420px) {
+  body {
+    padding: 14px;
+  }
+
+  .app-header {
+    margin-bottom: 12px;
+  }
+
+  .form-group {
+    margin-bottom: 12px;
+  }
+
+  .btn-generate-main {
+    padding: 11px 16px;
+    font-size: 13px;
+  }
 }
