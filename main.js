@@ -1,6 +1,6 @@
 /**
- * main.js - Core Photoshop Interaction & UI Controller for Nano Banana Pro V2
- * Backend: OpenRouter API with Nano Banana Layer Separation
+ * main.js - Astria Nano-Banana V2 Authentic Photoshop Controller
+ * Unified AI Prompt Card with Masked Smart Object Layer Separation
  */
 
 // Safe environment detection for Photoshop UXP and browser/preview contexts
@@ -24,15 +24,13 @@ const action = photoshop.action || (photoshop.action = {});
 const imaging = photoshop.imaging || (photoshop.imaging = {});
 const storage = uxp.storage || {};
 
-// Import API functions safely
+// Import API module
 let apiModule = {};
 try {
   if (typeof require !== "undefined") {
     apiModule = require("./api.js");
   }
-} catch (e) {
-  // Ignored if relative require not available
-}
+} catch (e) {}
 if (!apiModule || !apiModule.TOP_6_IMAGE_MODELS) {
   if (typeof window !== "undefined" && window.AstriaAPI) {
     apiModule = window.AstriaAPI;
@@ -40,20 +38,13 @@ if (!apiModule || !apiModule.TOP_6_IMAGE_MODELS) {
 }
 
 const {
-  TOP_6_IMAGE_MODELS = [
-    { id: "google/gemini-nano-banana-2.1", name: "Google: Nano Banana 2.1 (Fast & Consistent)" },
-    { id: "black-forest-labs/flux-3-image", name: "Black Forest Labs: FLUX 3 Image (Photoreal)" },
-    { id: "openai/gpt-image-2", name: "OpenAI: GPT Image 2 (High Adherence)" },
-    { id: "bytedance-seed/seedream-5-0-pro", name: "ByteDance: Seedream 5.0 Pro" },
-    { id: "krea/k3-edit", name: "Krea: K3 Edit (Inpainting)" },
-    { id: "recraft/recraft-v4.1", name: "Recraft: Recraft v4.1 (Design)" }
-  ],
+  TOP_6_IMAGE_MODELS = [],
   generateImage,
   calculateClosestAspectRatio,
   fetchAllImageModels,
 } = apiModule;
 
-// Safe Storage abstraction to prevent localStorage crashes in restricted sandbox
+// Safe Storage abstraction
 const safeStorage = {
   getItem: (key) => {
     try {
@@ -65,46 +56,43 @@ const safeStorage = {
   setItem: (key, val) => {
     try {
       if (typeof localStorage !== "undefined") localStorage.setItem(key, val);
-    } catch (e) {
-      console.warn("Could not save to localStorage:", e);
-    }
+    } catch (e) {}
   }
 };
 
-// State management
+// Application State
 let state = {
   apiKey: "",
-  prompt: "",
-  negativePrompt: "",
-  model: "google/gemini-nano-banana-2.1",
-  customModel: "",
-  aspectRatioMode: "auto",
-  referenceImageBase64: null,
-  isGenerating: false,
-  allModels: [],
-  activeFilter: "all",
-  searchQuery: "",
-  activeMode: "inpaint",
+  prompt: "Replace the earring",
+  negativePrompt: "blurry, low quality, distorted, artifacts",
+  model: "openai/gpt-image-2.5-sunburst",
+  modelDisplayName: "GPT Image 2.5 Sunburst",
+  count: 1,
+  resolution: "2K",
+  quality: "Medium",
   layerSeparation: true,
+  referenceImageBase64: null,
+  isSelectionActive: false,
+  selectionBounds: null,
+  isGenerating: false,
+  history: [],
 };
 
-// UI Elements Cache
+// UI Elements cache
 let el = {};
 
 /**
- * Robust Initialization (runs immediately if DOM is already ready)
+ * Bootstraps the application immediately or on DOMContentLoaded
  */
 function boot() {
   try {
-    console.log("Nano Banana Pro V2: Booting UI & Photoshop Controller...");
     initUI();
     attachEventListeners();
-    loadSavedSettings();
-    refreshDocStatus();
-    loadModelsCatalog();
-    console.log("Nano Banana Pro V2: Ready & Fully Responsive!");
+    loadSettings();
+    refreshPhotoshopContext();
+    console.log("Astria Nano-Banana V2: Ready & Responsive");
   } catch (err) {
-    console.error("Nano Banana Pro V2 Boot Error:", err);
+    console.error("Nano-Banana boot error:", err);
   }
 }
 
@@ -115,101 +103,100 @@ if (document.readyState === "loading") {
 }
 
 /**
- * Cache DOM elements safely
+ * Cache all DOM elements
  */
 function initUI() {
   el = {
-    settingsToggleBtn: document.getElementById("settingsToggleBtn"),
+    // Header & Drawers
+    btnHistoryToggle: document.getElementById("btnHistoryToggle"),
+    historyDrawer: document.getElementById("historyDrawer"),
+    historyList: document.getElementById("historyList"),
+    btnClearHistory: document.getElementById("btnClearHistory"),
+    btnSettingsToggle: document.getElementById("btnSettingsToggle"),
     settingsDrawer: document.getElementById("settingsDrawer"),
     apiKeyInput: document.getElementById("apiKeyInput"),
-    toggleApiKeyBtn: document.getElementById("toggleApiKeyBtn"),
-    saveKeyBadge: document.getElementById("saveKeyBadge"),
-    modelSelect: document.getElementById("modelSelect"),
-    moreModelsBtn: document.getElementById("moreModelsBtn"),
-    customModelContainer: document.getElementById("customModelContainer"),
-    customModelInput: document.getElementById("customModelInput"),
-    aspectRatioSelect: document.getElementById("aspectRatioSelect"),
-    promptText: document.getElementById("promptText"),
-    negativePromptText: document.getElementById("negativePromptText"),
-    refImageInput: document.getElementById("refImageInput"),
-    refUploadArea: document.getElementById("refUploadArea"),
-    refPreviewContainer: document.getElementById("refPreviewContainer"),
-    refPreviewImg: document.getElementById("refPreviewImg"),
-    clearRefBtn: document.getElementById("clearRefBtn"),
+    btnToggleKeyVisibility: document.getElementById("btnToggleKeyVisibility"),
     layerSeparationToggle: document.getElementById("layerSeparationToggle"),
-    statusBarCard: document.getElementById("statusBarCard"),
-    docStatusContent: document.getElementById("docStatusContent"),
-    refreshStatusBtn: document.getElementById("refreshStatusBtn"),
-    generateBtn: document.getElementById("generateBtn"),
-    generateSpinner: document.getElementById("generateSpinner"),
-    generateBtnText: document.getElementById("generateBtnText"),
-    statusMessage: document.getElementById("statusMessage"),
-    progressBar: document.getElementById("progressBar"),
-    progressBarTrack: document.getElementById("progressBarTrack"),
-    presetTags: document.querySelectorAll(".chip-tag"),
-    modeTabs: document.querySelectorAll(".mode-tab"),
-    // Modal elements
-    modelsModal: document.getElementById("modelsModal"),
-    closeModalBtn: document.getElementById("closeModalBtn"),
-    modelSearchInput: document.getElementById("modelSearchInput"),
-    modalFilterPills: document.getElementById("modalFilterPills"),
-    modalModelList: document.getElementById("modalModelList"),
+    negativePromptInput: document.getElementById("negativePromptInput"),
+    saveIndicator: document.getElementById("saveIndicator"),
+
+    // Image Tray
+    refThumbnailCard: document.getElementById("refThumbnailCard"),
+    refThumbnailImg: document.getElementById("refThumbnailImg"),
+    btnRemoveThumb: document.getElementById("btnRemoveThumb"),
+    btnAddImage: document.getElementById("btnAddImage"),
+    fileInput: document.getElementById("fileInput"),
+
+    // Prompt & Palette
+    promptInput: document.getElementById("promptInput"),
+    btnTogglePalette: document.getElementById("btnTogglePalette"),
+    stylePaletteDrawer: document.getElementById("stylePaletteDrawer"),
+    styleChips: document.querySelectorAll(".style-chip"),
+
+    // Result Banner
+    resultBanner: document.getElementById("resultBanner"),
+    resultText: document.getElementById("resultText"),
+
+    // Bottom Toolbar Pills
+    btnModelPill: document.getElementById("btnModelPill"),
+    labelCurrentModel: document.getElementById("labelCurrentModel"),
+    modelMenu: document.getElementById("modelMenu"),
+    btnCountPill: document.getElementById("btnCountPill"),
+    labelCount: document.getElementById("labelCount"),
+    countMenu: document.getElementById("countMenu"),
+    btnResPill: document.getElementById("btnResPill"),
+    labelRes: document.getElementById("labelRes"),
+    resMenu: document.getElementById("resMenu"),
+    btnQualityPill: document.getElementById("btnQualityPill"),
+    labelQuality: document.getElementById("labelQuality"),
+    qualityMenu: document.getElementById("qualityMenu"),
+
+    // Action Button
+    btnSendAction: document.getElementById("btnSendAction"),
+    sendSpinner: document.getElementById("sendSpinner"),
+    sendArrow: document.getElementById("sendArrow"),
+    sendCaret: document.getElementById("sendCaret"),
+
+    // Custom Model Modal
+    customModelModal: document.getElementById("customModelModal"),
+    customModelInput: document.getElementById("customModelInput"),
+    btnCancelCustom: document.getElementById("btnCancelCustom"),
+    btnApplyCustom: document.getElementById("btnApplyCustom"),
   };
 }
 
 /**
- * Attach UI event handlers safely
+ * Attach UI event handlers
  */
 function attachEventListeners() {
-  // Settings drawer toggle
-  if (el.settingsToggleBtn && el.settingsDrawer) {
-    el.settingsToggleBtn.addEventListener("click", (e) => {
+  // Toggle Settings Drawer (Avatar S)
+  if (el.btnSettingsToggle && el.settingsDrawer) {
+    el.btnSettingsToggle.addEventListener("click", (e) => {
       e.stopPropagation();
+      closeAllMenus();
       el.settingsDrawer.classList.toggle("open");
+      if (el.historyDrawer) el.historyDrawer.classList.remove("open");
       if (el.settingsDrawer.classList.contains("open") && el.apiKeyInput) {
         el.apiKeyInput.focus();
       }
     });
   }
 
-  // OpenRouter API Key handling
+  // Toggle API Key Visibility
+  if (el.btnToggleKeyVisibility && el.apiKeyInput) {
+    el.btnToggleKeyVisibility.addEventListener("click", () => {
+      const isPass = el.apiKeyInput.type === "password";
+      el.apiKeyInput.type = isPass ? "text" : "password";
+      el.btnToggleKeyVisibility.textContent = isPass ? "🔒" : "👁";
+    });
+  }
+
+  // API Key input
   if (el.apiKeyInput) {
     el.apiKeyInput.addEventListener("input", (e) => {
       state.apiKey = e.target.value.trim();
       safeStorage.setItem("openrouter_api_key", state.apiKey);
-      showKeySavedIndicator();
-    });
-  }
-
-  // Toggle API key visibility
-  if (el.toggleApiKeyBtn && el.apiKeyInput) {
-    el.toggleApiKeyBtn.addEventListener("click", () => {
-      const isPass = el.apiKeyInput.type === "password";
-      el.apiKeyInput.type = isPass ? "text" : "password";
-    });
-  }
-
-  // Workflow mode switcher
-  if (el.modeTabs) {
-    el.modeTabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        el.modeTabs.forEach((t) => t.classList.remove("active"));
-        tab.classList.add("active");
-        state.activeMode = tab.dataset.mode;
-
-        if (el.generateBtnText) {
-          if (state.activeMode === "inpaint") {
-            el.generateBtnText.textContent = "🍌 Run Nano Banana Edit";
-          } else if (state.activeMode === "generate") {
-            el.generateBtnText.textContent = "✨ Generate New Layer";
-          } else if (state.activeMode === "separation") {
-            el.generateBtnText.textContent = "✂️ Run Layer Separation";
-            if (el.promptText && !el.promptText.value.trim()) {
-              el.promptText.value = "Isolate and separate subjects and elements into clean layered groups";
-            }
-          }
-        }
-      });
+      showSaveIndicator();
     });
   }
 
@@ -217,152 +204,271 @@ function attachEventListeners() {
   if (el.layerSeparationToggle) {
     el.layerSeparationToggle.addEventListener("change", (e) => {
       state.layerSeparation = e.target.checked;
+      safeStorage.setItem("nano_layer_sep", state.layerSeparation ? "1" : "0");
     });
   }
 
-  // Model selection & Custom model visibility toggle
-  if (el.modelSelect) {
-    el.modelSelect.addEventListener("change", (e) => {
-      const selected = e.target.value;
-      state.model = selected;
-      if (el.customModelContainer) {
-        if (selected === "custom") {
-          el.customModelContainer.classList.add("visible");
-          if (el.customModelInput) el.customModelInput.focus();
-        } else {
-          el.customModelContainer.classList.remove("visible");
-        }
-      }
-      safeStorage.setItem("openrouter_model", selected);
+  // Negative prompt
+  if (el.negativePromptInput) {
+    el.negativePromptInput.addEventListener("input", (e) => {
+      state.negativePrompt = e.target.value.trim();
+      safeStorage.setItem("nano_neg_prompt", state.negativePrompt);
     });
   }
 
-  if (el.customModelInput) {
-    el.customModelInput.addEventListener("input", (e) => {
-      state.customModel = e.target.value.trim();
-      safeStorage.setItem("openrouter_custom_model", state.customModel);
+  // Toggle History Drawer
+  if (el.btnHistoryToggle && el.historyDrawer) {
+    el.btnHistoryToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeAllMenus();
+      el.historyDrawer.classList.toggle("open");
+      if (el.settingsDrawer) el.settingsDrawer.classList.remove("open");
+      renderHistoryList();
     });
   }
 
-  if (el.aspectRatioSelect) {
-    el.aspectRatioSelect.addEventListener("change", (e) => {
-      state.aspectRatioMode = e.target.value;
-      safeStorage.setItem("openrouter_aspect_ratio", e.target.value);
+  // Clear History
+  if (el.btnClearHistory) {
+    el.btnClearHistory.addEventListener("click", () => {
+      state.history = [];
+      safeStorage.setItem("nano_history", "[]");
+      renderHistoryList();
     });
   }
 
-  // More Models Explorer Modal trigger
-  if (el.moreModelsBtn) {
-    el.moreModelsBtn.addEventListener("click", () => {
-      openModelsModal();
-    });
-  }
-
-  if (el.closeModalBtn) {
-    el.closeModalBtn.addEventListener("click", () => {
-      closeModelsModal();
-    });
-  }
-
-  if (el.modelsModal) {
-    el.modelsModal.addEventListener("click", (e) => {
-      if (e.target === el.modelsModal) {
-        closeModelsModal();
-      }
-    });
-  }
-
-  // Modal search
-  if (el.modelSearchInput) {
-    el.modelSearchInput.addEventListener("input", (e) => {
-      state.searchQuery = e.target.value.toLowerCase().trim();
-      renderFilteredModels();
-    });
-  }
-
-  // Modal filter pills
-  if (el.modalFilterPills) {
-    el.modalFilterPills.querySelectorAll(".filter-pill").forEach((pill) => {
-      pill.addEventListener("click", () => {
-        el.modalFilterPills.querySelectorAll(".filter-pill").forEach((p) => p.classList.remove("active"));
-        pill.classList.add("active");
-        state.activeFilter = pill.dataset.filter;
-        renderFilteredModels();
-      });
-    });
-  }
-
-  // Reference Image Upload
-  if (el.refUploadArea && el.refImageInput) {
-    el.refUploadArea.addEventListener("click", () => {
-      el.refImageInput.click();
+  // Image Upload / Add Image
+  if (el.btnAddImage && el.fileInput) {
+    el.btnAddImage.addEventListener("click", () => {
+      el.fileInput.click();
     });
 
-    el.refImageInput.addEventListener("change", (e) => {
+    el.fileInput.addEventListener("change", (e) => {
       const file = e.target.files && e.target.files[0];
       if (file) {
-        loadReferenceImageFile(file);
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          setReferenceImage(evt.target.result);
+        };
+        reader.readAsDataURL(file);
       }
     });
   }
 
-  if (el.clearRefBtn) {
-    el.clearRefBtn.addEventListener("click", (e) => {
+  // Remove Thumbnail
+  if (el.btnRemoveThumb) {
+    el.btnRemoveThumb.addEventListener("click", (e) => {
       e.stopPropagation();
       clearReferenceImage();
     });
   }
 
-  // Quick modifier chips
-  if (el.presetTags && el.promptText) {
-    el.presetTags.forEach((tag) => {
-      tag.addEventListener("click", () => {
-        const textToAppend = tag.dataset.prompt || tag.textContent.trim();
-        const current = el.promptText.value.trim();
-        if (!current) {
-          el.promptText.value = textToAppend;
-        } else {
-          el.promptText.value = `${current}, ${textToAppend}`;
-        }
-        el.promptText.focus();
+  // Prompt Textarea
+  if (el.promptInput) {
+    el.promptInput.addEventListener("input", (e) => {
+      state.prompt = e.target.value;
+    });
+  }
+
+  // Style Palette Toggle
+  if (el.btnTogglePalette && el.stylePaletteDrawer) {
+    el.btnTogglePalette.addEventListener("click", (e) => {
+      e.stopPropagation();
+      el.stylePaletteDrawer.classList.toggle("open");
+    });
+  }
+
+  // Style Chips
+  if (el.styleChips && el.promptInput) {
+    el.styleChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const text = chip.dataset.style;
+        const cur = el.promptInput.value.trim();
+        el.promptInput.value = cur ? `${cur}, ${text}` : text;
+        state.prompt = el.promptInput.value;
+        el.promptInput.focus();
       });
     });
   }
 
-  // Refresh document and selection status
-  if (el.refreshStatusBtn) {
-    el.refreshStatusBtn.addEventListener("click", (e) => {
+  // Model Pill Dropdown
+  if (el.btnModelPill && el.modelMenu) {
+    el.btnModelPill.addEventListener("click", (e) => {
       e.stopPropagation();
-      refreshDocStatus();
+      const isOpen = el.modelMenu.classList.contains("open");
+      closeAllMenus();
+      if (!isOpen) el.modelMenu.classList.add("open");
+    });
+
+    el.modelMenu.querySelectorAll(".menu-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const modelId = item.dataset.model;
+        if (modelId === "custom") {
+          openCustomModelModal();
+        } else {
+          selectModel(modelId, item.textContent.trim());
+        }
+        el.modelMenu.classList.remove("open");
+      });
     });
   }
 
-  // Click on entire status bar card also refreshes
-  if (el.statusBarCard) {
-    el.statusBarCard.addEventListener("click", () => {
-      refreshDocStatus();
+  // Variations Count Pill Dropdown
+  if (el.btnCountPill && el.countMenu) {
+    el.btnCountPill.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = el.countMenu.classList.contains("open");
+      closeAllMenus();
+      if (!isOpen) el.countMenu.classList.add("open");
+    });
+
+    el.countMenu.querySelectorAll(".menu-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const countVal = parseInt(item.dataset.count, 10) || 1;
+        state.count = countVal;
+        if (el.labelCount) el.labelCount.textContent = countVal;
+        el.countMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
+        item.classList.add("active");
+        el.countMenu.classList.remove("open");
+      });
     });
   }
 
-  // Window focus auto-refreshes document status
-  window.addEventListener("focus", () => {
-    refreshDocStatus();
+  // Resolution Pill Dropdown
+  if (el.btnResPill && el.resMenu) {
+    el.btnResPill.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = el.resMenu.classList.contains("open");
+      closeAllMenus();
+      if (!isOpen) el.resMenu.classList.add("open");
+    });
+
+    el.resMenu.querySelectorAll(".menu-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const resVal = item.dataset.res;
+        state.resolution = resVal;
+        if (el.labelRes) el.labelRes.textContent = resVal.toUpperCase();
+        el.resMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
+        item.classList.add("active");
+        el.resMenu.classList.remove("open");
+      });
+    });
+  }
+
+  // Quality Pill Dropdown
+  if (el.btnQualityPill && el.qualityMenu) {
+    el.btnQualityPill.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = el.qualityMenu.classList.contains("open");
+      closeAllMenus();
+      if (!isOpen) el.qualityMenu.classList.add("open");
+    });
+
+    el.qualityMenu.querySelectorAll(".menu-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const qVal = item.dataset.quality;
+        state.quality = qVal;
+        if (el.labelQuality) el.labelQuality.textContent = qVal;
+        el.qualityMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
+        item.classList.add("active");
+        el.qualityMenu.classList.remove("open");
+      });
+    });
+  }
+
+  // Close menus on outside click
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".pill-dropdown-wrap")) {
+      closeAllMenus();
+    }
   });
 
-  // Main Action: Run Nano Banana Edit
-  if (el.generateBtn) {
-    el.generateBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      handleGenerateAction();
+  // Custom Model Modal
+  if (el.btnCancelCustom && el.customModelModal) {
+    el.btnCancelCustom.addEventListener("click", () => {
+      el.customModelModal.classList.remove("open");
     });
   }
+
+  if (el.btnApplyCustom && el.customModelInput) {
+    el.btnApplyCustom.addEventListener("click", () => {
+      const slug = el.customModelInput.value.trim();
+      if (slug) {
+        selectModel(slug, slug.split("/")[1] || slug);
+      }
+      el.customModelModal.classList.remove("open");
+    });
+  }
+
+  // Window focus refreshes Photoshop context
+  window.addEventListener("focus", () => {
+    refreshPhotoshopContext();
+  });
+
+  // Main Action: Run Generative Edit (White ↑ ▾ Button)
+  if (el.btnSendAction) {
+    el.btnSendAction.addEventListener("click", (e) => {
+      e.preventDefault();
+      handleRunGeneration();
+    });
+  }
+}
+
+function closeAllMenus() {
+  document.querySelectorAll(".pill-menu").forEach((m) => m.classList.remove("open"));
+}
+
+function openCustomModelModal() {
+  if (el.customModelModal) {
+    el.customModelModal.classList.add("open");
+    if (el.customModelInput) {
+      el.customModelInput.value = state.model.startsWith("custom:") ? state.model.replace("custom:", "") : "";
+      el.customModelInput.focus();
+    }
+  }
+}
+
+function selectModel(modelId, displayName) {
+  state.model = modelId;
+  state.modelDisplayName = displayName;
+  if (el.labelCurrentModel) {
+    el.labelCurrentModel.textContent = displayName;
+  }
+  safeStorage.setItem("nano_model", modelId);
+  safeStorage.setItem("nano_model_name", displayName);
+
+  if (el.modelMenu) {
+    el.modelMenu.querySelectorAll(".menu-item").forEach((item) => {
+      item.classList.toggle("active", item.dataset.model === modelId);
+    });
+  }
+}
+
+function setReferenceImage(dataUrl) {
+  state.referenceImageBase64 = dataUrl;
+  if (el.refThumbnailImg) el.refThumbnailImg.src = dataUrl;
+  if (el.refThumbnailCard) el.refThumbnailCard.style.display = "block";
+}
+
+function clearReferenceImage() {
+  state.referenceImageBase64 = null;
+  if (el.fileInput) el.fileInput.value = "";
+  if (el.refThumbnailImg) el.refThumbnailImg.src = "";
+  if (el.refThumbnailCard) el.refThumbnailCard.style.display = "none";
+}
+
+function showSaveIndicator() {
+  if (!el.saveIndicator) return;
+  el.saveIndicator.style.opacity = "1";
+  setTimeout(() => {
+    if (el.saveIndicator) el.saveIndicator.style.opacity = "0";
+  }, 1600);
 }
 
 /**
  * Load settings from safeStorage
  */
-function loadSavedSettings() {
-  const savedKey = safeStorage.getItem("openrouter_api_key") || safeStorage.getItem("gemini_api_key") || "";
+function loadSettings() {
+  const savedKey = safeStorage.getItem("openrouter_api_key") || "";
   if (savedKey) {
     state.apiKey = savedKey;
     if (el.apiKeyInput) el.apiKeyInput.value = savedKey;
@@ -370,220 +476,34 @@ function loadSavedSettings() {
     el.settingsDrawer.classList.add("open");
   }
 
-  const savedModel = safeStorage.getItem("openrouter_model") || "google/gemini-nano-banana-2.1";
+  const savedModel = safeStorage.getItem("nano_model");
+  const savedModelName = safeStorage.getItem("nano_model_name");
   if (savedModel) {
-    selectModelInDropdown(savedModel);
+    selectModel(savedModel, savedModelName || savedModel.split("/")[1] || savedModel);
   }
 
-  const savedCustom = safeStorage.getItem("openrouter_custom_model") || "";
-  if (savedCustom && el.customModelInput) {
-    state.customModel = savedCustom;
-    el.customModelInput.value = savedCustom;
+  const savedSep = safeStorage.getItem("nano_layer_sep");
+  if (savedSep !== null && el.layerSeparationToggle) {
+    state.layerSeparation = savedSep === "1";
+    el.layerSeparationToggle.checked = state.layerSeparation;
   }
 
-  const savedRatio = safeStorage.getItem("openrouter_aspect_ratio");
-  if (savedRatio && el.aspectRatioSelect) {
-    state.aspectRatioMode = savedRatio;
-    el.aspectRatioSelect.value = savedRatio;
+  const savedNeg = safeStorage.getItem("nano_neg_prompt");
+  if (savedNeg && el.negativePromptInput) {
+    state.negativePrompt = savedNeg;
+    el.negativePromptInput.value = savedNeg;
   }
-}
 
-function showKeySavedIndicator() {
-  if (!el.saveKeyBadge) return;
-  el.saveKeyBadge.textContent = "Saved";
-  el.saveKeyBadge.style.opacity = "1";
-  setTimeout(() => {
-    if (el.saveKeyBadge) el.saveKeyBadge.style.opacity = "0";
-  }, 1800);
-}
-
-/**
- * Loads image models catalog for modal
- */
-async function loadModelsCatalog() {
   try {
-    if (typeof fetchAllImageModels === "function") {
-      state.allModels = await fetchAllImageModels();
-    }
-  } catch (err) {
-    console.warn("Error loading models catalog:", err);
-  }
+    const rawHist = safeStorage.getItem("nano_history");
+    if (rawHist) state.history = JSON.parse(rawHist);
+  } catch (e) {}
 }
 
 /**
- * Open the models explorer modal
+ * Query Photoshop document and selection
  */
-function openModelsModal() {
-  if (!el.modelsModal) return;
-  el.modelsModal.classList.add("open");
-  if (el.modelSearchInput) {
-    el.modelSearchInput.value = "";
-    state.searchQuery = "";
-    el.modelSearchInput.focus();
-  }
-  renderFilteredModels();
-}
-
-function closeModelsModal() {
-  if (!el.modelsModal) return;
-  el.modelsModal.classList.remove("open");
-}
-
-/**
- * Render filtered model list inside modal
- */
-function renderFilteredModels() {
-  if (!el.modalModelList) return;
-  const container = el.modalModelList;
-  container.innerHTML = "";
-
-  const list = (state.allModels && state.allModels.length > 0) ? state.allModels : (TOP_6_IMAGE_MODELS || []);
-
-  const filtered = list.filter((m) => {
-    const id = (m.id || "").toLowerCase();
-    const name = (m.name || m.id || "").toLowerCase();
-
-    // Provider filter
-    if (state.activeFilter !== "all") {
-      if (!id.includes(state.activeFilter) && !name.includes(state.activeFilter)) {
-        return false;
-      }
-    }
-
-    // Search query filter
-    if (state.searchQuery) {
-      if (!id.includes(state.searchQuery) && !name.includes(state.searchQuery)) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 20px 10px; color: var(--text-secondary); font-size: 11px;">
-        No models found matching "${escapeHtml(state.searchQuery)}".<br>
-        <span style="font-size: 10px; color: var(--banana-yellow); cursor: pointer; text-decoration: underline;" id="btnUseCustomSearch">Use "${escapeHtml(state.searchQuery)}" as custom slug</span>
-      </div>
-    `;
-    const btn = document.getElementById("btnUseCustomSearch");
-    if (btn) {
-      btn.addEventListener("click", () => {
-        selectCustomModel(state.searchQuery);
-        closeModelsModal();
-      });
-    }
-    return;
-  }
-
-  filtered.forEach((model) => {
-    const isSelected = state.model === model.id;
-    const card = document.createElement("div");
-    card.className = `model-item-card ${isSelected ? "selected" : ""}`;
-
-    const providerName = (model.id && model.id.split("/")[0]) || "model";
-
-    card.innerHTML = `
-      <div style="display: flex; flex-direction: column; overflow: hidden; min-width: 0; flex: 1;">
-        <span class="model-item-name">${escapeHtml(model.name || model.id)}</span>
-        <span class="model-item-id">${escapeHtml(model.id)}</span>
-      </div>
-      <span class="model-item-badge">${escapeHtml(providerName)}</span>
-    `;
-
-    card.addEventListener("click", () => {
-      selectModelInDropdown(model.id, model.name);
-      closeModelsModal();
-    });
-
-    container.appendChild(card);
-  });
-}
-
-/**
- * Select a model in the dropdown, dynamically appending if not in default options
- */
-function selectModelInDropdown(modelId, modelName = null) {
-  state.model = modelId;
-  safeStorage.setItem("openrouter_model", modelId);
-
-  if (!el.modelSelect) return;
-
-  let found = false;
-  for (let i = 0; i < el.modelSelect.options.length; i++) {
-    if (el.modelSelect.options[i].value === modelId) {
-      el.modelSelect.selectedIndex = i;
-      found = true;
-      break;
-    }
-  }
-
-  // If not found in default list, create and append clean option
-  if (!found && modelId !== "custom") {
-    const displayName = modelName || modelId;
-    const newOption = document.createElement("option");
-    newOption.value = modelId;
-    newOption.textContent = `${displayName}`;
-    newOption.selected = true;
-    el.modelSelect.appendChild(newOption);
-  }
-
-  if (el.customModelContainer) {
-    if (modelId === "custom") {
-      el.customModelContainer.classList.add("visible");
-      if (el.customModelInput) el.customModelInput.focus();
-    } else {
-      el.customModelContainer.classList.remove("visible");
-    }
-  }
-}
-
-function selectCustomModel(customSlug) {
-  state.model = "custom";
-  state.customModel = customSlug;
-  if (el.modelSelect) el.modelSelect.value = "custom";
-  if (el.customModelContainer) el.customModelContainer.classList.add("visible");
-  if (el.customModelInput) el.customModelInput.value = customSlug;
-  safeStorage.setItem("openrouter_model", "custom");
-  safeStorage.setItem("openrouter_custom_model", customSlug);
-}
-
-function escapeHtml(str) {
-  return String(str || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-/**
- * Handle reference image loading from file input
- */
-function loadReferenceImageFile(file) {
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const dataUrl = event.target.result;
-    state.referenceImageBase64 = dataUrl;
-    if (el.refPreviewImg) el.refPreviewImg.src = dataUrl;
-    if (el.refPreviewContainer) el.refPreviewContainer.style.display = "block";
-    if (el.refUploadArea) el.refUploadArea.style.display = "none";
-  };
-  reader.readAsDataURL(file);
-}
-
-function clearReferenceImage() {
-  state.referenceImageBase64 = null;
-  if (el.refImageInput) el.refImageInput.value = "";
-  if (el.refPreviewImg) el.refPreviewImg.src = "";
-  if (el.refPreviewContainer) el.refPreviewContainer.style.display = "none";
-  if (el.refUploadArea) el.refUploadArea.style.display = "block";
-}
-
-/**
- * Checks if active document and selection exist in Photoshop
- */
-async function checkPhotoshopEnvironment() {
+async function refreshPhotoshopContext() {
   let doc = null;
   try {
     if (app && app.documents && app.documents.length > 0) {
@@ -594,18 +514,12 @@ async function checkPhotoshopEnvironment() {
   }
 
   if (!doc) {
-    return {
-      hasDoc: false,
-      hasSelection: false,
-      doc: null,
-      bounds: null,
-      message: "No active document open in Photoshop.",
-    };
+    setResultBanner("No active document in Photoshop. Open an image to begin.", "info");
+    return;
   }
 
-  let selInfo = { hasSelection: false, bounds: null };
-
-  // Query selection property using batchPlay
+  // Check selection
+  let selBounds = null;
   try {
     if (action && typeof action.batchPlay === "function") {
       const res = await action.batchPlay(
@@ -627,123 +541,165 @@ async function checkPhotoshopEnvironment() {
         const top = Math.round(s.top?._value ?? s.top ?? 0);
         const right = Math.round(s.right?._value ?? s.right ?? doc.width);
         const bottom = Math.round(s.bottom?._value ?? s.bottom ?? doc.height);
-        const width = Math.max(1, right - left);
-        const height = Math.max(1, bottom - top);
-
-        selInfo = {
-          hasSelection: true,
-          bounds: { left, top, right, bottom, width, height },
+        selBounds = {
+          left, top, right, bottom,
+          width: Math.max(1, right - left),
+          height: Math.max(1, bottom - top),
         };
       }
     }
-  } catch (e) {
-    // Selection doesn't exist via batchPlay property
+  } catch (e) {}
+
+  if (selBounds) {
+    state.isSelectionActive = true;
+    state.selectionBounds = selBounds;
+
+    // Auto-preview cropped selection thumbnail in the tray if no manual reference image was loaded
+    if (!state.referenceImageBase64) {
+      try {
+        const previewPng = await exportSelectedAreaAsPng(doc, selBounds);
+        if (previewPng) {
+          if (el.refThumbnailImg) el.refThumbnailImg.src = `data:image/png;base64,${previewPng}`;
+          if (el.refThumbnailCard) el.refThumbnailCard.style.display = "block";
+        }
+      } catch (e) {}
+    }
+
+    setResultBanner(`Selection active (${selBounds.width} × ${selBounds.height}px). Ready for Smart Object edit.`, "success");
+  } else {
+    state.isSelectionActive = false;
+    state.selectionBounds = { left: 0, top: 0, right: doc.width, bottom: doc.height, width: doc.width, height: doc.height };
+    if (!state.referenceImageBase64 && el.refThumbnailCard) {
+      el.refThumbnailCard.style.display = "none";
+    }
+    setResultBanner("Result added to Photoshop as a masked Smart Object.", "success");
+  }
+}
+
+/**
+ * Set the Result / Status notification banner text and state
+ */
+function setResultBanner(text, type = "success") {
+  if (!el.resultBanner || !el.resultText) return;
+  el.resultText.textContent = text;
+  el.resultBanner.className = `result-banner ${type}`;
+}
+
+/**
+ * Executes the generation and masked Smart Object placement
+ */
+async function handleRunGeneration() {
+  if (state.isGenerating) return;
+
+  const apiKey = (el.apiKeyInput ? el.apiKeyInput.value : state.apiKey).trim();
+  const prompt = (el.promptInput ? el.promptInput.value : state.prompt).trim();
+
+  // Validate API Key
+  if (!apiKey) {
+    setResultBanner("Please provide your OpenRouter API key (click 'S' avatar at top-right).", "error");
+    if (el.settingsDrawer) el.settingsDrawer.classList.add("open");
+    if (el.apiKeyInput) el.apiKeyInput.focus();
+    return;
   }
 
-  // Fallback to DOM selection bounds
-  if (!selInfo.hasSelection && doc.selection) {
+  // Validate Prompt
+  if (!prompt) {
+    setResultBanner("Please enter an edit prompt (e.g. 'Replace the earring').", "error");
+    if (el.promptInput) el.promptInput.focus();
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    setResultBanner(`Generating with ${state.modelDisplayName}...`, "info");
+
+    // 1. Check Photoshop Document
+    let doc = null;
     try {
-      const b = doc.selection.bounds;
-      if (b) {
-        const top = Math.round(b.top ?? b[0]);
-        const left = Math.round(b.left ?? b[1]);
-        const bottom = Math.round(b.bottom ?? b[2]);
-        const right = Math.round(b.right ?? b[3]);
-        selInfo = {
-          hasSelection: true,
-          bounds: {
-            left,
-            top,
-            right,
-            bottom,
-            width: Math.max(1, right - left),
-            height: Math.max(1, bottom - top),
-          },
-        };
+      if (app && app.documents && app.documents.length > 0) {
+        doc = app.activeDocument;
       }
     } catch (e) {
-      // No active selection
-    }
-  }
-
-  return {
-    hasDoc: true,
-    hasSelection: selInfo.hasSelection,
-    doc,
-    bounds: selInfo.bounds || {
-      left: 0,
-      top: 0,
-      right: doc.width,
-      bottom: doc.height,
-      width: doc.width,
-      height: doc.height,
-    },
-  };
-}
-
-/**
- * Updates status indicator box in panel UI
- */
-async function refreshDocStatus() {
-  if (!el.docStatusContent) return;
-  try {
-    const env = await checkPhotoshopEnvironment();
-    if (!env.hasDoc) {
-      el.docStatusContent.innerHTML = `
-        <div class="status-dot warning"></div>
-        <div class="status-info">
-          <span class="status-title">No Document Active</span>
-          <span class="status-desc">Open an image in Photoshop to begin</span>
-        </div>
-      `;
-      return;
+      doc = null;
     }
 
-    if (env.hasSelection) {
-      const b = env.bounds;
-      el.docStatusContent.innerHTML = `
-        <div class="status-dot active"></div>
-        <div class="status-info">
-          <span class="status-title">Selection Active (${b.width} × ${b.height}px)</span>
-          <span class="status-desc">Target: [${b.left}, ${b.top}] to [${b.right}, ${b.bottom}]</span>
-        </div>
-      `;
-    } else {
-      el.docStatusContent.innerHTML = `
-        <div class="status-dot idle"></div>
-        <div class="status-info">
-          <span class="status-title">Full Canvas Active (${env.doc.width} × ${env.doc.height}px)</span>
-          <span class="status-desc">Use Marquee or Lasso to target specific region</span>
-        </div>
-      `;
+    if (!doc) {
+      throw new Error("No active document in Photoshop. Please open an image first.");
     }
+
+    // 2. Read Selection pixels if available
+    let selectionBase64 = null;
+    const bounds = state.selectionBounds || { left: 0, top: 0, right: doc.width, bottom: doc.height, width: doc.width, height: doc.height };
+    if (state.isSelectionActive) {
+      selectionBase64 = await exportSelectedAreaAsPng(doc, bounds);
+    }
+
+    // 3. Aspect Ratio calculation
+    let effectiveAspectRatio = "1:1";
+    if (state.resolution === "auto" || state.isSelectionActive) {
+      effectiveAspectRatio = calculateClosestAspectRatio(bounds.width, bounds.height);
+    }
+
+    // 4. Call OpenRouter API
+    if (typeof generateImage !== "function") {
+      throw new Error("API module not loaded. Please reload the plugin in UDT.");
+    }
+
+    const apiResult = await generateImage({
+      apiKey,
+      prompt,
+      negativePrompt: state.negativePrompt,
+      model: state.model,
+      aspectRatio: effectiveAspectRatio,
+      referenceImageBase64: state.referenceImageBase64,
+      selectionImageBase64: selectionBase64,
+    });
+
+    // 5. Place Smart Object with Layer Separation (Automated Layer Mask)
+    setResultBanner("Placing Smart Object and creating Layer Mask...", "info");
+    await insertAndAlignGeneratedImage(apiResult.bytes, bounds, state.isSelectionActive, prompt, state.layerSeparation);
+
+    // 6. Update Success Banner (Matches exact screenshot text!)
+    setResultBanner("Result added to Photoshop as a masked Smart Object.", "success");
+
+    // 7. Add to History
+    addHistoryItem(prompt, state.modelDisplayName, apiResult.base64);
   } catch (err) {
-    if (el.docStatusContent) {
-      el.docStatusContent.innerHTML = `
-        <div class="status-dot warning"></div>
-        <div class="status-info">
-          <span class="status-title">Status Check</span>
-          <span class="status-desc">${err.message || err}</span>
-        </div>
-      `;
-    }
+    console.error("Generation error:", err);
+    setResultBanner(err.message || String(err), "error");
+  } finally {
+    setLoading(false);
   }
 }
 
 /**
- * Exports selected area pixels as PNG bytes using photoshop.imaging
- * Wraps state access in executeAsModal
+ * Toggle UI loading state
+ */
+function setLoading(loading) {
+  state.isGenerating = loading;
+  if (el.btnSendAction) el.btnSendAction.disabled = loading;
+
+  if (loading) {
+    if (el.sendSpinner) el.sendSpinner.style.display = "inline-block";
+    if (el.sendArrow) el.sendArrow.style.display = "none";
+    if (el.sendCaret) el.sendCaret.style.display = "none";
+  } else {
+    if (el.sendSpinner) el.sendSpinner.style.display = "none";
+    if (el.sendArrow) el.sendArrow.style.display = "inline";
+    if (el.sendCaret) el.sendCaret.style.display = "inline";
+  }
+}
+
+/**
+ * Export selection area pixels as PNG using imaging.getPixels
  */
 async function exportSelectedAreaAsPng(doc, bounds) {
+  if (!core || !core.executeAsModal) return null;
   let base64Png = null;
 
-  if (!core || !core.executeAsModal) {
-    console.warn("executeAsModal not available in preview environment.");
-    return null;
-  }
-
   await core.executeAsModal(
-    async (context) => {
+    async () => {
       let pixels = null;
       try {
         pixels = await imaging.getPixels({
@@ -758,48 +714,39 @@ async function exportSelectedAreaAsPng(doc, bounds) {
           componentSize: 8,
         });
 
-        if (!pixels || !pixels.imageData) {
-          throw new Error("Unable to read image pixels from Photoshop document.");
+        if (pixels && pixels.imageData) {
+          base64Png = await imaging.encodeImageData({
+            imageData: pixels.imageData,
+            base64: true,
+            format: "png",
+          });
         }
-
-        base64Png = await imaging.encodeImageData({
-          imageData: pixels.imageData,
-          base64: true,
-          format: "png",
-        });
       } finally {
         if (pixels && pixels.imageData) {
           try {
             pixels.imageData.dispose();
-          } catch (e) {
-            console.warn("Error disposing imageData:", e);
-          }
+          } catch (e) {}
         }
       }
     },
-    { commandName: "Export Selected Area Pixels" }
+    { commandName: "Export Selection Pixels" }
   );
 
   return base64Png;
 }
 
 /**
- * Creates a new layer above current layer, inserts generated image,
- * aligns it to original bounds, and applies Nano Banana V2 Layer Separation.
- * Wrapped in photoshop.core.executeAsModal.
+ * Insert generated image as Smart Object and apply Layer Separation (Mask)
  */
 async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, promptText, applySeparation) {
-  if (!core || !core.executeAsModal) {
-    console.log("Mock placement: Core executeAsModal not available.");
-    return;
-  }
+  if (!core || !core.executeAsModal) return;
 
   await core.executeAsModal(
-    async (context) => {
+    async () => {
       const doc = app.activeDocument;
-      if (!doc) throw new Error("No active document found in Photoshop.");
+      if (!doc) return;
 
-      // 1. Write PNG buffer to temporary file in UXP storage
+      // 1. Write binary buffer to UXP temporary storage file
       const tempFolder = await storage.localFileSystem.getTemporaryFolder();
       const tempFileName = `nanobanana_${Date.now()}.png`;
       const tempFile = await tempFolder.createFile(tempFileName, { overwrite: true });
@@ -808,7 +755,7 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
       await tempFile.write(rawBuffer, { format: storage.formats.binary });
       const sessionToken = storage.localFileSystem.createSessionToken(tempFile);
 
-      // 2. Nano Banana V2 Layer Separation: Backup selection to temporary channel
+      // 2. Duplicate selection to temporary alpha channel for Layer Masking
       let backedUpSelection = false;
       const tempChannelName = `__NanoBanana_Mask_${Date.now()}`;
       if (hasSelection && applySeparation) {
@@ -824,12 +771,10 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
             { synchronousExecution: true }
           );
           backedUpSelection = true;
-        } catch (e) {
-          console.warn("Could not backup selection channel:", e);
-        }
+        } catch (e) {}
       }
 
-      // Clear selection marquee so placeEvent places cleanly without auto-cropping
+      // Clear active marquee so placeEvent places cleanly
       try {
         await action.batchPlay(
           [
@@ -841,9 +786,9 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
           ],
           { synchronousExecution: true }
         );
-      } catch (err) {}
+      } catch (e) {}
 
-      // 3. BatchPlay: Place generated image file as a new layer
+      // 3. BatchPlay placeEvent: Places PNG as a Smart Object Layer
       await action.batchPlay(
         [
           {
@@ -862,30 +807,27 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
         { synchronousExecution: true }
       );
 
-      // The placed layer is now the active layer
+      // Rename layer to prompt text
       const placedLayer = doc.activeLayers[0];
       if (placedLayer) {
         try {
           const cleanPrompt = promptText.trim().replace(/[\r\n]+/g, " ");
-          placedLayer.name = `Nano Banana: ${cleanPrompt.slice(0, 24)}${cleanPrompt.length > 24 ? "..." : ""}`;
+          placedLayer.name = `Nano Banana: ${cleanPrompt.slice(0, 24)}`;
         } catch (e) {}
 
-        // 4. BatchPlay: Align and scale to original selection bounds
+        // 4. Transform and align to selection bounds
         if (bounds && bounds.width && bounds.height) {
-          const layerBounds = placedLayer.bounds;
-          const curW = Math.max(1, layerBounds.right - layerBounds.left);
-          const curH = Math.max(1, layerBounds.bottom - layerBounds.top);
+          const lBounds = placedLayer.bounds;
+          const curW = Math.max(1, lBounds.right - lBounds.left);
+          const curH = Math.max(1, lBounds.bottom - lBounds.top);
 
           const scaleX = (bounds.width / curW) * 100;
           const scaleY = (bounds.height / curH) * 100;
 
           const targetCenterX = bounds.left + bounds.width / 2;
           const targetCenterY = bounds.top + bounds.height / 2;
-          const curCenterX = layerBounds.left + curW / 2;
-          const curCenterY = layerBounds.top + curH / 2;
-
-          const deltaX = targetCenterX - curCenterX;
-          const deltaY = targetCenterY - curCenterY;
+          const curCenterX = lBounds.left + curW / 2;
+          const curCenterY = lBounds.top + curH / 2;
 
           await action.batchPlay(
             [
@@ -897,8 +839,8 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
                   _value: "QCSAverage",
                 },
                 offset: {
-                  _horizontal: { _unit: "pixelsUnit", _value: deltaX },
-                  _vertical: { _unit: "pixelsUnit", _value: deltaY },
+                  _horizontal: { _unit: "pixelsUnit", _value: targetCenterX - curCenterX },
+                  _vertical: { _unit: "pixelsUnit", _value: targetCenterY - curCenterY },
                 },
                 width: { _unit: "percentUnit", _value: scaleX },
                 height: { _unit: "percentUnit", _value: scaleY },
@@ -908,7 +850,7 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
           );
         }
 
-        // 5. Nano Banana V2 Layer Separation: Re-apply selection & create automated Layer Mask
+        // 5. Restore selection and create automated Layer Mask
         if (backedUpSelection) {
           try {
             await action.batchPlay(
@@ -918,34 +860,16 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
                   _target: [{ _ref: "channel", _property: "selection" }],
                   to: { _ref: "channel", _name: tempChannelName },
                 },
-              ],
-              { synchronousExecution: true }
-            );
-
-            await action.batchPlay(
-              [
                 {
                   _obj: "make",
                   null: { _ref: "layerMask" },
                   at: { _enum: "ordinal", _value: "target" },
                   using: { _enum: "userMaskSet", _value: "revealSelection" },
                 },
-              ],
-              { synchronousExecution: true }
-            );
-
-            await action.batchPlay(
-              [
                 {
                   _obj: "delete",
                   _target: [{ _ref: "channel", _name: tempChannelName }],
                 },
-              ],
-              { synchronousExecution: true }
-            );
-
-            await action.batchPlay(
-              [
                 {
                   _obj: "set",
                   _target: [{ _ref: "channel", _property: "selection" }],
@@ -955,176 +879,70 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
               { synchronousExecution: true }
             );
           } catch (maskErr) {
-            console.warn("Layer separation mask error:", maskErr);
+            console.warn("Mask creation error:", maskErr);
           }
         }
       }
 
-      // Clean up temp file
+      // Cleanup temp file
       try {
         await tempFile.delete();
       } catch (e) {}
     },
-    { commandName: "Nano Banana: Edit with Layer Separation" }
+    { commandName: "Nano Banana: Masked Smart Object Placement" }
   );
 }
 
 /**
- * Resolves effective model slug from dropdown or custom input
+ * Session generation history tracking
  */
-function getSelectedModelSlug() {
-  const selected = el.modelSelect ? el.modelSelect.value : "google/gemini-nano-banana-2.1";
-  if (selected === "custom") {
-    const custom = el.customModelInput ? el.customModelInput.value.trim() : "";
-    if (!custom) {
-      throw new Error("Custom model selected, but no model slug was entered.");
-    }
-    return custom;
-  }
-  return selected;
+function addHistoryItem(prompt, modelName, thumbB64) {
+  const item = {
+    id: Date.now(),
+    prompt,
+    modelName,
+    thumb: thumbB64 ? `data:image/png;base64,${thumbB64}` : null,
+    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  };
+  state.history.unshift(item);
+  if (state.history.length > 20) state.history.pop();
+  safeStorage.setItem("nano_history", JSON.stringify(state.history));
+  renderHistoryList();
 }
 
-/**
- * Primary workflow executor triggered by 'Run Nano Banana Edit'
- */
-async function handleGenerateAction() {
-  if (state.isGenerating) return;
-
-  const apiKey = el.apiKeyInput ? el.apiKeyInput.value.trim() : "";
-  const prompt = el.promptText ? el.promptText.value.trim() : "";
-  const negativePrompt = el.negativePromptText ? el.negativePromptText.value.trim() : "";
-  const aspectRatioMode = el.aspectRatioSelect ? el.aspectRatioSelect.value : "auto";
-  const applySeparation = el.layerSeparationToggle ? el.layerSeparationToggle.checked : true;
-
-  // Validation
-  if (!apiKey) {
-    showStatus("Please enter your OpenRouter API key in settings (⚙️ icon at top right).", "error");
-    if (el.settingsDrawer) {
-      el.settingsDrawer.classList.add("open");
-      if (el.apiKeyInput) el.apiKeyInput.focus();
-    }
+function renderHistoryList() {
+  if (!el.historyList) return;
+  if (!state.history || state.history.length === 0) {
+    el.historyList.innerHTML = '<div class="empty-history">No generations yet in this session.</div>';
     return;
   }
 
-  if (!prompt) {
-    showStatus("Please enter an edit prompt describing what to change or generate.", "error");
-    if (el.promptText) el.promptText.focus();
-    return;
-  }
-
-  let effectiveModel;
-  try {
-    effectiveModel = getSelectedModelSlug();
-  } catch (modelErr) {
-    showStatus(modelErr.message, "error");
-    if (el.customModelInput) el.customModelInput.focus();
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    // Step 1: Check document and selection
-    showStatus("Reading Photoshop canvas & active selection...", "info", 10);
-    const env = await checkPhotoshopEnvironment();
-    if (!env.hasDoc) {
-      throw new Error("No active document in Photoshop. Please open or create an image canvas first.");
-    }
-
-    if (state.activeMode === "inpaint" && !env.hasSelection) {
-      throw new Error("Inpaint/Edit requires an active selection. Use the Marquee or Lasso tool to select an area, or switch to 'Generate' mode.");
-    }
-
-    const { doc, hasSelection, bounds } = env;
-
-    // Step 2: Export selected area pixels if selection exists
-    let selectionBase64 = null;
-    if (hasSelection) {
-      showStatus(`Exporting selection area (${bounds.width}×${bounds.height}px)...`, "info", 25);
-      selectionBase64 = await exportSelectedAreaAsPng(doc, bounds);
-    }
-
-    // Step 3: Aspect Ratio
-    let effectiveAspectRatio = "1:1";
-    if (aspectRatioMode === "auto") {
-      effectiveAspectRatio = calculateClosestAspectRatio(bounds.width, bounds.height);
-    } else {
-      effectiveAspectRatio = aspectRatioMode;
-    }
-
-    // Step 4: OpenRouter API Call
-    const modelDisplayName = effectiveModel.split("/")[1] || effectiveModel;
-    showStatus(`Generating with ${modelDisplayName}...`, "info", 45);
-
-    if (typeof generateImage !== "function") {
-      throw new Error("OpenRouter API module is not loaded properly. Please reload the plugin.");
-    }
-
-    const apiResult = await generateImage({
-      apiKey,
-      prompt,
-      negativePrompt,
-      model: effectiveModel,
-      aspectRatio: effectiveAspectRatio,
-      referenceImageBase64: state.referenceImageBase64,
-      selectionImageBase64: selectionBase64,
-    });
-
-    // Step 5: Placement & Layer Separation
-    showStatus("Placing Smart Object & applying Layer Separation...", "info", 80);
-
-    await insertAndAlignGeneratedImage(apiResult.bytes, bounds, hasSelection, prompt, applySeparation);
-
-    showStatus("✨ Generative edit complete! Layer added successfully.", "success", 100);
-  } catch (err) {
-    console.error("Nano Banana generation error:", err);
-    showStatus(err.message || String(err), "error");
-  } finally {
-    setLoading(false);
-  }
-}
-
-/**
- * Update UI loading state
- */
-function setLoading(loading) {
-  state.isGenerating = loading;
-  if (el.generateBtn) el.generateBtn.disabled = loading;
-
-  if (loading) {
-    if (el.generateSpinner) el.generateSpinner.style.display = "inline-block";
-    if (el.generateBtnText) el.generateBtnText.textContent = "Processing Edit...";
-    if (el.progressBarTrack) el.progressBarTrack.style.display = "block";
-  } else {
-    if (el.generateSpinner) el.generateSpinner.style.display = "none";
-    if (el.generateBtnText) {
-      if (state.activeMode === "inpaint") {
-        el.generateBtnText.textContent = "🍌 Run Nano Banana Edit";
-      } else if (state.activeMode === "generate") {
-        el.generateBtnText.textContent = "✨ Generate New Layer";
-      } else if (state.activeMode === "separation") {
-        el.generateBtnText.textContent = "✂️ Run Layer Separation";
+  el.historyList.innerHTML = "";
+  state.history.forEach((h) => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerHTML = `
+      ${h.thumb ? `<img src="${h.thumb}" class="history-thumb" />` : '<div class="history-thumb"></div>'}
+      <div class="history-info">
+        <span class="history-prompt">${escapeHtml(h.prompt)}</span>
+        <span class="history-time">${escapeHtml(h.modelName)} • ${h.time}</span>
+      </div>
+    `;
+    div.addEventListener("click", () => {
+      if (el.promptInput) {
+        el.promptInput.value = h.prompt;
+        state.prompt = h.prompt;
       }
-    }
-    setTimeout(() => {
-      if (el.progressBarTrack) el.progressBarTrack.style.display = "none";
-      if (el.progressBar) el.progressBar.style.width = "0%";
-    }, 1500);
-  }
+      if (el.historyDrawer) el.historyDrawer.classList.remove("open");
+    });
+    el.historyList.appendChild(div);
+  });
 }
 
-/**
- * Display status message and progress percentage
- */
-function showStatus(msg, type = "info", progressPercent = null) {
-  if (el.statusMessage) {
-    el.statusMessage.textContent = msg;
-    el.statusMessage.className = `status-msg ${type}`;
-    el.statusMessage.style.display = "block";
-  }
-
-  if (progressPercent !== null && el.progressBar) {
-    if (el.progressBarTrack) el.progressBarTrack.style.display = "block";
-    el.progressBar.style.width = `${progressPercent}%`;
-  }
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

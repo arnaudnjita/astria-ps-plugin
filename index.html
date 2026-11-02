@@ -3,259 +3,285 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Nano Banana Pro V2</title>
+  <title>Nano-Banana</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app-wrapper">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="brand-group">
-        <div class="brand-logo-badge">🍌</div>
-        <div class="brand-text">
-          <span class="brand-title">Nano Banana</span>
-          <span class="brand-subtitle">Pro V2 • OpenRouter</span>
+  <div class="nano-app-container">
+    
+    <!-- Top Header Bar -->
+    <header class="nano-header">
+      <div class="header-brand">
+        <!-- Astria Logo Icon (Wave Gradient) -->
+        <div class="astria-logo-badge">
+          <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="#18181b"/>
+            <path d="M6 21C9 14 13 14 16 19C19 24 23 24 26 17" stroke="url(#astria-grad-1)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M6 15C9 9 13 9 16 14C19 19 23 19 26 12" stroke="url(#astria-grad-2)" stroke-width="3" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="astria-grad-1" x1="6" y1="21" x2="26" y2="17" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#f97316"/>
+                <stop offset="0.5" stop-color="#facc15"/>
+                <stop offset="1" stop-color="#06b6d4"/>
+              </linearGradient>
+              <linearGradient id="astria-grad-2" x1="6" y1="15" x2="26" y2="12" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#ec4899"/>
+                <stop offset="0.5" stop-color="#f97316"/>
+                <stop offset="1" stop-color="#3b82f6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="header-titles">
+          <span class="brand-name">Astria Nano Banan...</span>
+          <span class="brand-version">v2.0.21</span>
         </div>
       </div>
-      <div class="header-actions">
-        <button type="button" class="btn-icon-header" id="settingsToggleBtn" title="OpenRouter API Settings">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="#a3a3a3">
-            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+
+      <div class="header-controls">
+        <!-- History Dropdown Pill -->
+        <button type="button" class="pill-btn history-pill" id="btnHistoryToggle" title="Session Generation History">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
           </svg>
+          <span>History</span>
+          <span class="dropdown-caret">▾</span>
+        </button>
+
+        <!-- User Profile / Settings Avatar Pill -->
+        <button type="button" class="avatar-pill" id="btnSettingsToggle" title="OpenRouter API Key & Settings">
+          <div class="avatar-circle">S</div>
+          <span class="dropdown-caret">▾</span>
         </button>
       </div>
     </header>
 
-    <!-- Collapsible Settings Drawer -->
+    <!-- Settings Drawer (Revealed via Avatar 'S' button) -->
     <div class="settings-drawer" id="settingsDrawer">
-      <div class="settings-header">
-        <span class="settings-title">OpenRouter Key</span>
-        <div class="settings-links">
-          <span class="save-key-badge" id="saveKeyBadge">Saved</span>
-          <a href="https://openrouter.ai/keys" target="_blank" class="get-key-link">Get Key ↗</a>
+      <div class="drawer-header">
+        <span class="drawer-title">OpenRouter API Configuration</span>
+        <a href="https://openrouter.ai/keys" target="_blank" class="link-get-key">Get Key ↗</a>
+      </div>
+      <div class="settings-body">
+        <div class="input-with-action">
+          <input
+            type="password"
+            id="apiKeyInput"
+            class="clean-input"
+            placeholder="OpenRouter API Key (sk-or-v1-...)"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="button" class="btn-icon-inside" id="btnToggleKeyVisibility" title="Show / Hide Key">👁</button>
+        </div>
+
+        <div class="setting-row">
+          <span class="setting-label">Layer Separation (Smart Object + Mask)</span>
+          <label class="switch">
+            <input type="checkbox" id="layerSeparationToggle" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-row-vertical">
+          <span class="setting-label">Negative Prompt (Avoid)</span>
+          <input
+            type="text"
+            id="negativePromptInput"
+            class="clean-input text-sm"
+            placeholder="blurry, low quality, distorted, artifacts"
+            value="blurry, low quality, distorted, artifacts"
+          />
+        </div>
+
+        <div class="setting-footer">
+          <span class="save-indicator" id="saveIndicator">Saved</span>
         </div>
       </div>
-      <div class="password-wrap">
-        <input
-          type="password"
-          id="apiKeyInput"
-          class="input-text"
-          placeholder="Enter OpenRouter API Key (sk-or-v1-...)"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button type="button" class="btn-toggle-eye" id="toggleApiKeyBtn" title="Show/Hide Key">
-          <svg id="eyeIcon" width="13" height="13" viewBox="0 0 24 24" fill="#a3a3a3">
-            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+    </div>
+
+    <!-- History Drawer (Revealed via 'History' button) -->
+    <div class="history-drawer" id="historyDrawer">
+      <div class="drawer-header">
+        <span class="drawer-title">Recent Edits (Session)</span>
+        <button type="button" class="btn-clear-history" id="btnClearHistory">Clear</button>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="empty-history">No generations yet in this session.</div>
+      </div>
+    </div>
+
+    <!-- Main Unified AI Prompt Card (Matches Video Exactly) -->
+    <main class="nano-main-card">
+      
+      <!-- Top Image Tray (Thumbnail + Add image button) -->
+      <div class="image-tray">
+        <!-- Active Selection / Reference Thumbnail -->
+        <div class="thumbnail-card" id="refThumbnailCard">
+          <img id="refThumbnailImg" src="" alt="Context" />
+          <button type="button" class="btn-remove-thumb" id="btnRemoveThumb" title="Remove reference">✕</button>
+        </div>
+
+        <!-- Add image button -->
+        <button type="button" class="add-image-card" id="btnAddImage" title="Add reference image or sync selection">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+            <line x1="12" y1="8" x2="12" y2="14"/>
+            <line x1="9" y1="11" x2="15" y2="11"/>
           </svg>
+          <span class="add-image-label">Add image</span>
         </button>
+        <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp" style="display: none;" />
       </div>
-    </div>
 
-    <!-- Workflow Mode Tabs (Nano Banana V2 Style) -->
-    <div class="mode-tabs-container">
-      <button type="button" class="mode-tab active" data-mode="inpaint" title="Inpaint & Edit selected area">
-        <span class="tab-label-full">Inpaint / Edit</span>
-        <span class="tab-label-short">Inpaint</span>
-      </button>
-      <button type="button" class="mode-tab" data-mode="generate" title="Generate new image layer">
-        <span class="tab-label-full">Generate</span>
-        <span class="tab-label-short">Generate</span>
-      </button>
-      <button type="button" class="mode-tab" data-mode="separation" title="Isolate and separate subject into layers">
-        <span class="tab-label-full">Layer Separation</span>
-        <span class="tab-label-short">Separate</span>
-      </button>
-    </div>
+      <!-- Prompt Text Area (Clean, borderless, seamless) -->
+      <div class="prompt-container">
+        <textarea
+          id="promptInput"
+          class="prompt-textarea"
+          rows="2"
+          placeholder="Replace the earring"
+          spellcheck="false"
+        >Replace the earring</textarea>
+      </div>
 
-    <!-- Live Selection / Document Status -->
-    <div class="status-bar-card" id="statusBarCard" title="Click to refresh document status">
-      <div class="status-left" id="docStatusContent">
-        <div class="status-dot idle"></div>
-        <div class="status-info">
-          <span class="status-title">Checking Photoshop...</span>
-          <span class="status-desc">Reading active document & selection</span>
+      <!-- Quick Style Presets Drawer (Toggled by 🎨 palette button) -->
+      <div class="style-palette-drawer" id="stylePaletteDrawer">
+        <span class="style-chip" data-style="photorealistic, 8k, realistic lighting">Photoreal</span>
+        <span class="style-chip" data-style="seamless blend, match original environment">Seamless Blend</span>
+        <span class="style-chip" data-style="studio photography, high-end commercial">Studio</span>
+        <span class="style-chip" data-style="cyberpunk neon, cinematic octane">Cyberpunk</span>
+        <span class="style-chip" data-style="remove object, clean seamless inpaint">Clean Fill</span>
+      </div>
+
+      <!-- Result / Status Notification Banner (Green masked Smart Object pill) -->
+      <div class="result-banner" id="resultBanner">
+        <div class="banner-icon-wrap" id="bannerIcon">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
         </div>
+        <span class="result-text" id="resultText">Result added to Photoshop as a masked Smart Object.</span>
       </div>
-      <button type="button" class="btn-refresh" id="refreshStatusBtn" title="Refresh Document Status">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="#a3a3a3">
-          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-        </svg>
-      </button>
-    </div>
 
-    <!-- Model & Aspect Ratio Controls -->
-    <div class="form-group">
-      <div class="row model-ratio-row">
-        <div class="col model-col">
-          <div class="form-label-row">
-            <span class="form-label">Model Engine</span>
-            <button type="button" class="label-action-btn" id="moreModelsBtn" title="Explore 60+ OpenRouter models">
-              Browse (60+) ▾
+      <!-- Bottom Toolbar Row with Pills and White Send Button -->
+      <footer class="toolbar-row">
+        <div class="toolbar-left-pills">
+          
+          <!-- Model Selector Pill -->
+          <div class="pill-dropdown-wrap">
+            <button type="button" class="toolbar-pill model-pill" id="btnModelPill">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+                <path d="M2 12h20"/>
+              </svg>
+              <span id="labelCurrentModel">GPT Image 2.5 Sunburst</span>
+              <span class="dropdown-caret">▾</span>
             </button>
+            <div class="pill-menu" id="modelMenu">
+              <div class="menu-item active" data-model="openai/gpt-image-2.5-sunburst">GPT Image 2.5 Sunburst</div>
+              <div class="menu-item" data-model="google/gemini-nano-banana-2.1">Nano Banana 2.1</div>
+              <div class="menu-item" data-model="black-forest-labs/flux-3-image">FLUX 3 Image</div>
+              <div class="menu-item" data-model="openai/gpt-image-2">GPT Image 2</div>
+              <div class="menu-item" data-model="bytedance-seed/seedream-5-0-pro">Seedream 5.0 Pro</div>
+              <div class="menu-item" data-model="krea/k3-edit">Krea K3 Edit</div>
+              <div class="menu-item" data-model="recraft/recraft-v4.1">Recraft v4.1</div>
+              <div class="menu-item custom-choice" data-model="custom">Custom model...</div>
+            </div>
           </div>
-          <select id="modelSelect" class="select-input">
-            <option value="google/gemini-nano-banana-2.1" selected>Google: Nano Banana 2.1 (Fast & Consistent)</option>
-            <option value="black-forest-labs/flux-3-image">FLUX 3 Image (Black Forest Labs)</option>
-            <option value="openai/gpt-image-2">OpenAI: GPT Image 2 (Adherence)</option>
-            <option value="bytedance-seed/seedream-5-0-pro">ByteDance: Seedream 5.0 Pro</option>
-            <option value="krea/k3-edit">Krea: K3 Edit (Inpainting)</option>
-            <option value="recraft/recraft-v4.1">Recraft: v4.1 (Clean Details)</option>
-            <option value="custom">Custom model slug...</option>
-          </select>
-        </div>
-        <div class="col ratio-col">
-          <div class="form-label-row">
-            <span class="form-label">Aspect Ratio</span>
-          </div>
-          <select id="aspectRatioSelect" class="select-input">
-            <option value="auto" selected>Auto (From Selection)</option>
-            <option value="1:1">1:1 Square</option>
-            <option value="4:3">4:3 Landscape</option>
-            <option value="3:4">3:4 Portrait</option>
-            <option value="16:9">16:9 Widescreen</option>
-            <option value="9:16">9:16 Vertical</option>
-          </select>
-        </div>
-      </div>
 
-      <!-- Custom Model Input -->
-      <div class="custom-model-container" id="customModelContainer">
+          <!-- Variations / Quantity Pill -->
+          <div class="pill-dropdown-wrap">
+            <button type="button" class="toolbar-pill count-pill" id="btnCountPill">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+                <polyline points="2 12 12 17 22 12"/>
+              </svg>
+              <span id="labelCount">1</span>
+              <span class="dropdown-caret">▾</span>
+            </button>
+            <div class="pill-menu compact" id="countMenu">
+              <div class="menu-item active" data-count="1">1 variation</div>
+              <div class="menu-item" data-count="2">2 variations</div>
+              <div class="menu-item" data-count="4">4 variations</div>
+            </div>
+          </div>
+
+          <!-- Resolution Pill -->
+          <div class="pill-dropdown-wrap">
+            <button type="button" class="toolbar-pill res-pill" id="btnResPill">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span id="labelRes">2K</span>
+              <span class="dropdown-caret">▾</span>
+            </button>
+            <div class="pill-menu compact" id="resMenu">
+              <div class="menu-item" data-res="auto">Auto (Selection)</div>
+              <div class="menu-item" data-res="1K">1K (Standard)</div>
+              <div class="menu-item active" data-res="2K">2K (High Res)</div>
+              <div class="menu-item" data-res="4K">4K (Ultra HD)</div>
+            </div>
+          </div>
+
+          <!-- Quality / Creativity Pill -->
+          <div class="pill-dropdown-wrap">
+            <button type="button" class="toolbar-pill quality-pill" id="btnQualityPill">
+              <span id="labelQuality">Medium</span>
+              <span class="dropdown-caret">▾</span>
+            </button>
+            <div class="pill-menu compact" id="qualityMenu">
+              <div class="menu-item" data-quality="Fast">Fast</div>
+              <div class="menu-item active" data-quality="Medium">Medium</div>
+              <div class="menu-item" data-quality="High">High Quality</div>
+            </div>
+          </div>
+
+          <!-- Style Palette Toggle Button -->
+          <button type="button" class="toolbar-icon-btn" id="btnTogglePalette" title="Quick Style Modifiers">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Distinctive White Send Button Pill (↑ ▾) -->
+        <button type="button" class="btn-send-pill" id="btnSendAction" title="Run Generative Edit">
+          <span class="spinner" id="sendSpinner"></span>
+          <span class="arrow-icon" id="sendArrow">↑</span>
+          <span class="arrow-caret" id="sendCaret">▾</span>
+        </button>
+      </footer>
+    </main>
+
+    <!-- Custom Model Modal Dialog -->
+    <div class="custom-modal-backdrop" id="customModelModal">
+      <div class="custom-modal-box">
+        <div class="custom-modal-title">Enter Custom OpenRouter Model</div>
         <input
           type="text"
           id="customModelInput"
-          class="input-text"
-          placeholder="Enter OpenRouter model slug (e.g. black-forest-labs/flux-1-schnell)"
-          spellcheck="false"
+          class="clean-input"
+          placeholder="e.g. black-forest-labs/flux-1-schnell"
         />
-      </div>
-    </div>
-
-    <!-- Prompt Composer -->
-    <div class="form-group">
-      <div class="form-label-row">
-        <span class="form-label">Edit Prompt</span>
-      </div>
-      <textarea
-        id="promptText"
-        class="textarea-input"
-        rows="2"
-        placeholder="Describe the edit or what to generate in the selection..."
-        spellcheck="false"
-      ></textarea>
-      
-      <!-- Quick Modifiers -->
-      <div class="prompt-chips-wrap">
-        <span class="chip-tag" data-prompt="photorealistic, 8k, natural lighting">Photoreal</span>
-        <span class="chip-tag" data-prompt="seamless edge blending, match scene lighting">Seamless Blend</span>
-        <span class="chip-tag" data-prompt="clean studio lighting, professional">Studio</span>
-        <span class="chip-tag" data-prompt="cyberpunk neon style, detailed octane render">Cyberpunk</span>
-        <span class="chip-tag" data-prompt="remove unwanted objects, clean background fill">Clean Fill</span>
-      </div>
-    </div>
-
-    <!-- Reference / Context Conditioning -->
-    <div class="form-group">
-      <div class="form-label-row">
-        <span class="form-label">Reference Context</span>
-        <span class="label-optional">Optional</span>
-      </div>
-      <input type="file" id="refImageInput" accept="image/png, image/jpeg, image/webp" style="display: none;" />
-      
-      <!-- Upload Drop Slot -->
-      <div class="reference-slot-card" id="refUploadArea">
-        <div class="ref-slot-content">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#a3a3a3">
-            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-          </svg>
-          <div class="ref-slot-text">
-            <span class="ref-slot-title">Choose Reference Image</span>
-            <span class="ref-slot-sub">PNG, JPEG, WebP</span>
-          </div>
+        <div class="custom-modal-actions">
+          <button type="button" class="btn-secondary" id="btnCancelCustom">Cancel</button>
+          <button type="button" class="btn-primary" id="btnApplyCustom">Apply</button>
         </div>
       </div>
-
-      <!-- Preview Box -->
-      <div class="ref-preview-box" id="refPreviewContainer">
-        <img id="refPreviewImg" class="ref-preview-img" alt="Reference Preview" />
-        <button type="button" class="btn-remove-ref" id="clearRefBtn" title="Remove reference image">✕</button>
-      </div>
     </div>
 
-    <!-- V2 Layer Separation Toggle -->
-    <div class="separation-toggle-row">
-      <div class="toggle-label-wrap">
-        <span class="toggle-main-label">Layer Separation</span>
-        <span class="toggle-sub-label">Smart Object + auto Layer Mask</span>
-      </div>
-      <label class="switch" title="Toggle Layer Separation">
-        <input type="checkbox" id="layerSeparationToggle" checked />
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <!-- Negative Prompt (Collapsible) -->
-    <div class="form-group">
-      <div class="form-label-row">
-        <span class="form-label">Negative Prompt</span>
-        <span class="label-optional">Avoid</span>
-      </div>
-      <input
-        type="text"
-        id="negativePromptText"
-        class="input-text"
-        placeholder="blurry, low quality, artifacts, watermark, distorted"
-        value="blurry, low quality, artifacts, watermark, distorted"
-        spellcheck="false"
-      />
-    </div>
-
-    <!-- Primary Action Area -->
-    <div class="action-box">
-      <button type="button" id="generateBtn" class="btn-generate-main">
-        <span class="spinner" id="generateSpinner"></span>
-        <span id="generateBtnText">🍌 Run Nano Banana Edit</span>
-      </button>
-
-      <!-- Progress Track -->
-      <div class="progress-track" id="progressBarTrack">
-        <div class="progress-bar" id="progressBar"></div>
-      </div>
-
-      <!-- Status Message -->
-      <div class="status-msg" id="statusMessage"></div>
-    </div>
-
-    <!-- Footer Info -->
-    <footer class="app-footer">
-      Nano Banana Pro Architecture • Astria & OpenRouter
-    </footer>
-  </div>
-
-  <!-- 60+ Models Explorer Modal -->
-  <div class="modal-backdrop" id="modelsModal">
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-title">OpenRouter Image Models Catalog</span>
-        <button type="button" class="btn-close-modal" id="closeModalBtn" title="Close Modal">✕</button>
-      </div>
-      <div class="modal-search-bar">
-        <input type="text" id="modelSearchInput" class="modal-search-input" placeholder="Search 60+ models by name or provider..." />
-      </div>
-      <div class="modal-filter-pills" id="modalFilterPills">
-        <button type="button" class="filter-pill active" data-filter="all">All</button>
-        <button type="button" class="filter-pill" data-filter="google">Google</button>
-        <button type="button" class="filter-pill" data-filter="flux">FLUX</button>
-        <button type="button" class="filter-pill" data-filter="openai">OpenAI</button>
-        <button type="button" class="filter-pill" data-filter="bytedance">ByteDance</button>
-        <button type="button" class="filter-pill" data-filter="krea">Krea</button>
-        <button type="button" class="filter-pill" data-filter="recraft">Recraft</button>
-        <button type="button" class="filter-pill" data-filter="qwen">Qwen</button>
-      </div>
-      <div class="modal-model-list" id="modalModelList">
-        <!-- Rendered model items -->
-      </div>
-    </div>
   </div>
 
   <!-- Scripts -->

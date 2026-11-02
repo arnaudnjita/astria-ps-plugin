@@ -14,6 +14,12 @@ const APP_TITLE = "Astria AI Generative Fill (Photoshop UXP)";
  */
 const TOP_6_IMAGE_MODELS = [
   {
+    id: "openai/gpt-image-2.5-sunburst",
+    name: "GPT Image 2.5 Sunburst",
+    badge: "Trending",
+    provider: "OpenAI"
+  },
+  {
     id: "google/gemini-nano-banana-2.1",
     name: "Google: Nano Banana 2.1 (Fast & Consistent)",
     badge: "Recommended",

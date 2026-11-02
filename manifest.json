@@ -1,8 +1,8 @@
 {
   "manifestVersion": 5,
-  "id": "com.astria.generativefill",
-  "name": "Astria AI Generative Fill",
-  "version": "1.1.0",
+  "id": "com.astria.nanobanana",
+  "name": "Nano-Banana",
+  "version": "2.0.21",
   "main": "index.html",
   "host": [
     {
@@ -13,15 +13,15 @@
   "entrypoints": [
     {
       "type": "panel",
-      "id": "generativeFillPanel",
-      "name": "AI Generative Fill",
+      "id": "nanobananaPanel",
+      "name": "Nano-Banana",
       "minimumSize": {
-        "width": 300,
-        "height": 450
+        "width": 260,
+        "height": 380
       },
       "preferredSize": {
-        "width": 360,
-        "height": 680
+        "width": 340,
+        "height": 580
       },
       "maximumSize": {
         "width": 800,
