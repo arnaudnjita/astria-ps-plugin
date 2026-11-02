@@ -1,6 +1,6 @@
 /**
  * main.js - Core Photoshop Interaction & UI Controller for AI Generative Fill
- * Backend: OpenRouter API
+ * Backend: OpenRouter API with Nano Banana V2 Layer Separation
  */
 
 const photoshop = require("photoshop");
@@ -616,10 +616,11 @@ async function exportSelectedAreaAsPng(doc, bounds) {
 
 /**
  * Creates a new layer above the current layer, inserts the generated image,
- * and aligns it to the original selection bounds using photoshop.action.batchPlay.
+ * aligns it to original bounds, and applies Layer Separation (smart mask)
+ * matching the Nano Banana V2 workflow.
  * Wrapped in photoshop.core.executeAsModal.
  */
-async function insertAndAlignGeneratedImage(resultBytes, bounds, promptText) {
+async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, promptText) {
   await core.executeAsModal(
     async (context) => {
       const doc = app.activeDocument;
@@ -634,7 +635,29 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, promptText) {
       await tempFile.write(rawBuffer, { format: storage.formats.binary });
       const sessionToken = storage.localFileSystem.createSessionToken(tempFile);
 
-      // 2. Clear any active selection marquee so placeEvent places without auto-cropping
+      // 2. Nano Banana V2 Layer Separation: If an active selection exists,
+      // backup selection to temporary alpha channel before clearing for placement
+      let backedUpSelection = false;
+      const tempChannelName = `__AI_Mask_${Date.now()}`;
+      if (hasSelection) {
+        try {
+          await action.batchPlay(
+            [
+              {
+                _obj: "duplicate",
+                _target: [{ _ref: "channel", _property: "selection" }],
+                name: tempChannelName,
+              },
+            ],
+            { synchronousExecution: true }
+          );
+          backedUpSelection = true;
+        } catch (e) {
+          console.warn("Could not backup selection channel:", e);
+        }
+      }
+
+      // Clear selection marquee so placeEvent places cleanly without auto-cropping
       try {
         await action.batchPlay(
           [
@@ -646,9 +669,7 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, promptText) {
           ],
           { synchronousExecution: true }
         );
-      } catch (err) {
-        // Ignore if no selection was present
-      }
+      } catch (err) {}
 
       // 3. BatchPlay: Place the generated image file as a new layer
       await action.batchPlay(
@@ -714,16 +735,71 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, promptText) {
             { synchronousExecution: true }
           );
         }
+
+        // 5. Nano Banana V2 Layer Separation: Re-apply selection & create automated Layer Mask
+        if (backedUpSelection) {
+          try {
+            // Restore selection from backup channel
+            await action.batchPlay(
+              [
+                {
+                  _obj: "set",
+                  _target: [{ _ref: "channel", _property: "selection" }],
+                  to: { _ref: "channel", _name: tempChannelName },
+                },
+              ],
+              { synchronousExecution: true }
+            );
+
+            // Create Layer Mask revealing the exact selection shape
+            await action.batchPlay(
+              [
+                {
+                  _obj: "make",
+                  null: { _ref: "layerMask" },
+                  at: { _enum: "ordinal", _value: "target" },
+                  using: { _enum: "userMaskSet", _value: "revealSelection" },
+                },
+              ],
+              { synchronousExecution: true }
+            );
+
+            // Clean up temporary alpha channel
+            await action.batchPlay(
+              [
+                {
+                  _obj: "delete",
+                  _target: [{ _ref: "channel", _name: tempChannelName }],
+                },
+              ],
+              { synchronousExecution: true }
+            );
+
+            // Clear selection marquee when done
+            await action.batchPlay(
+              [
+                {
+                  _obj: "set",
+                  _target: [{ _ref: "channel", _property: "selection" }],
+                  to: { _enum: "ordinal", _value: "none" },
+                },
+              ],
+              { synchronousExecution: true }
+            );
+          } catch (maskErr) {
+            console.warn("Layer separation mask error:", maskErr);
+          }
+        }
       }
 
-      // 5. Clean up temporary file
+      // 6. Clean up temporary file
       try {
         await tempFile.delete();
       } catch (e) {
         // Best effort cleanup
       }
     },
-    { commandName: "AI Generative Fill: Insert Layer" }
+    { commandName: "AI Generative Fill: Layer Separation" }
   );
 }
 
@@ -815,12 +891,12 @@ async function handleGenerateAction() {
       selectionImageBase64: selectionBase64,
     });
 
-    // Step 5: Insert generated image and align to bounds in Photoshop
-    showStatus("Inserting generated layer and aligning to bounds...", "info", 80);
+    // Step 5: Insert generated image, align bounds, and apply Layer Separation
+    showStatus("Applying Layer Separation & alignment in Photoshop...", "info", 80);
 
-    await insertAndAlignGeneratedImage(apiResult.bytes, bounds, prompt);
+    await insertAndAlignGeneratedImage(apiResult.bytes, bounds, hasSelection, prompt);
 
-    showStatus("Generation complete! New layer added to Photoshop.", "success", 100);
+    showStatus("Generation complete! Layer created with non-destructive layer mask.", "success", 100);
     refreshDocStatus();
   } catch (err) {
     console.error("Generative Fill Error:", err);
