@@ -1,6 +1,6 @@
 /**
- * main.js - Core Photoshop Interaction & UI Controller for AI Generative Fill
- * Backend: OpenRouter API with Nano Banana V2 Layer Separation
+ * main.js - Core Photoshop Interaction & UI Controller for Nano Banana Pro V2
+ * Backend: OpenRouter API with Nano Banana Layer Separation
  */
 
 const photoshop = require("photoshop");
@@ -35,13 +35,12 @@ let state = {
   allModels: [],
   activeFilter: "all",
   searchQuery: "",
+  activeMode: "inpaint",
+  layerSeparation: true,
 };
 
 // UI Elements Cache
 let el = {};
-
-const SVG_EYE_OPEN = "M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z";
-const SVG_EYE_CLOSED = "M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z";
 
 document.addEventListener("DOMContentLoaded", () => {
   initUI();
@@ -56,12 +55,12 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 function initUI() {
   el = {
+    settingsToggleBtn: document.getElementById("settingsToggleBtn"),
+    settingsDrawer: document.getElementById("settingsDrawer"),
     apiKeyInput: document.getElementById("apiKeyInput"),
     toggleApiKeyBtn: document.getElementById("toggleApiKeyBtn"),
-    eyeIconPath: document.querySelector("#eyeIcon path"),
     saveKeyBadge: document.getElementById("saveKeyBadge"),
     modelSelect: document.getElementById("modelSelect"),
-    otherModelsOptGroup: document.getElementById("otherModelsOptGroup"),
     moreModelsBtn: document.getElementById("moreModelsBtn"),
     customModelContainer: document.getElementById("customModelContainer"),
     customModelInput: document.getElementById("customModelInput"),
@@ -73,23 +72,23 @@ function initUI() {
     refPreviewContainer: document.getElementById("refPreviewContainer"),
     refPreviewImg: document.getElementById("refPreviewImg"),
     clearRefBtn: document.getElementById("clearRefBtn"),
+    layerSeparationToggle: document.getElementById("layerSeparationToggle"),
     docStatusContent: document.getElementById("docStatusContent"),
     refreshStatusBtn: document.getElementById("refreshStatusBtn"),
     generateBtn: document.getElementById("generateBtn"),
     generateSpinner: document.getElementById("generateSpinner"),
-    sparkleBtnIcon: document.getElementById("sparkleBtnIcon"),
     generateBtnText: document.getElementById("generateBtnText"),
     statusMessage: document.getElementById("statusMessage"),
     progressBar: document.getElementById("progressBar"),
     progressBarTrack: document.getElementById("progressBarTrack"),
-    presetTags: document.querySelectorAll(".preset-tag"),
+    presetTags: document.querySelectorAll(".chip-tag"),
+    modeTabs: document.querySelectorAll(".mode-tab"),
     // Modal elements
     modelsModal: document.getElementById("modelsModal"),
     closeModalBtn: document.getElementById("closeModalBtn"),
     modelSearchInput: document.getElementById("modelSearchInput"),
     modalFilterPills: document.getElementById("modalFilterPills"),
     modalModelList: document.getElementById("modalModelList"),
-    modelsCountBadge: document.getElementById("modelsCountBadge"),
   };
 }
 
@@ -97,6 +96,14 @@ function initUI() {
  * Attach UI event handlers
  */
 function attachEventListeners() {
+  // Settings drawer toggle
+  el.settingsToggleBtn.addEventListener("click", () => {
+    el.settingsDrawer.classList.toggle("open");
+    if (el.settingsDrawer.classList.contains("open")) {
+      el.apiKeyInput.focus();
+    }
+  });
+
   // OpenRouter API Key handling
   el.apiKeyInput.addEventListener("input", (e) => {
     state.apiKey = e.target.value.trim();
@@ -104,13 +111,35 @@ function attachEventListeners() {
     showKeySavedIndicator();
   });
 
-  // Toggle API key visibility using SVG
+  // Toggle API key visibility
   el.toggleApiKeyBtn.addEventListener("click", () => {
     const isPass = el.apiKeyInput.type === "password";
     el.apiKeyInput.type = isPass ? "text" : "password";
-    if (el.eyeIconPath) {
-      el.eyeIconPath.setAttribute("d", isPass ? SVG_EYE_CLOSED : SVG_EYE_OPEN);
-    }
+  });
+
+  // Workflow mode switcher
+  el.modeTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      el.modeTabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      state.activeMode = tab.dataset.mode;
+
+      if (state.activeMode === "inpaint") {
+        el.generateBtnText.textContent = "🍌 Run Nano Banana Edit";
+      } else if (state.activeMode === "generate") {
+        el.generateBtnText.textContent = "✨ Generate New Layer";
+      } else if (state.activeMode === "separation") {
+        el.generateBtnText.textContent = "✂️ Run Layer Separation";
+        if (!el.promptText.value.trim()) {
+          el.promptText.value = "Isolate and separate subjects and elements into clean layered groups";
+        }
+      }
+    });
+  });
+
+  // Layer separation switch
+  el.layerSeparationToggle.addEventListener("change", (e) => {
+    state.layerSeparation = e.target.checked;
   });
 
   // Model selection & Custom model visibility toggle
@@ -184,7 +213,7 @@ function attachEventListeners() {
     clearReferenceImage();
   });
 
-  // Preset prompt chips
+  // Quick modifier chips
   el.presetTags.forEach((tag) => {
     tag.addEventListener("click", () => {
       const textToAppend = tag.dataset.prompt || tag.textContent.trim();
@@ -208,7 +237,7 @@ function attachEventListeners() {
     refreshDocStatus();
   });
 
-  // Main Action: Generate to New Layer
+  // Main Action: Run Nano Banana Edit
   el.generateBtn.addEventListener("click", () => {
     handleGenerateAction();
   });
@@ -222,6 +251,9 @@ function loadSavedSettings() {
   if (savedKey) {
     state.apiKey = savedKey;
     el.apiKeyInput.value = savedKey;
+  } else {
+    // If no key yet, open settings drawer automatically on first launch
+    el.settingsDrawer.classList.add("open");
   }
 
   const savedModel = localStorage.getItem("openrouter_model") || "google/gemini-nano-banana-2.1";
@@ -245,9 +277,9 @@ function loadSavedSettings() {
 function showKeySavedIndicator() {
   if (!el.saveKeyBadge) return;
   el.saveKeyBadge.textContent = "Saved";
-  el.saveKeyBadge.classList.add("visible");
+  el.saveKeyBadge.style.opacity = "1";
   setTimeout(() => {
-    el.saveKeyBadge.classList.remove("visible");
+    el.saveKeyBadge.style.opacity = "0";
   }, 1800);
 }
 
@@ -257,9 +289,6 @@ function showKeySavedIndicator() {
 async function loadModelsCatalog() {
   try {
     state.allModels = await fetchAllImageModels();
-    if (el.modelsCountBadge) {
-      el.modelsCountBadge.textContent = `${state.allModels.length} Models`;
-    }
   } catch (err) {
     console.warn("Error loading models catalog:", err);
   }
@@ -312,9 +341,9 @@ function renderFilteredModels() {
 
   if (filtered.length === 0) {
     container.innerHTML = `
-      <div style="text-align: center; padding: 24px 10px; color: var(--text-tertiary); font-size: 11px;">
+      <div style="text-align: center; padding: 20px 10px; color: var(--text-secondary); font-size: 11px;">
         No models found matching "${state.searchQuery}".<br>
-        <span style="font-size: 10px; color: var(--accent-blue); cursor: pointer;" id="btnUseCustomSearch">Use "${state.searchQuery}" as custom slug</span>
+        <span style="font-size: 10px; color: var(--banana-yellow); cursor: pointer; text-decoration: underline;" id="btnUseCustomSearch">Use "${state.searchQuery}" as custom slug</span>
       </div>
     `;
     const btn = document.getElementById("btnUseCustomSearch");
@@ -335,7 +364,7 @@ function renderFilteredModels() {
     const providerName = model.id.split("/")[0] || "model";
 
     card.innerHTML = `
-      <div class="model-info-block">
+      <div style="display: flex; flex-direction: column; overflow: hidden;">
         <span class="model-item-name">${escapeHtml(model.name || model.id)}</span>
         <span class="model-item-id">${escapeHtml(model.id)}</span>
       </div>
@@ -368,15 +397,14 @@ function selectModelInDropdown(modelId, modelName = null) {
     }
   }
 
-  // If not found in default list, add to Other Models optgroup
+  // If not found in default list, create and append a clean option
   if (!found && modelId !== "custom") {
-    el.otherModelsOptGroup.style.display = "block";
     const displayName = modelName || modelId;
     const newOption = document.createElement("option");
     newOption.value = modelId;
     newOption.textContent = `${displayName}`;
     newOption.selected = true;
-    el.otherModelsOptGroup.appendChild(newOption);
+    el.modelSelect.appendChild(newOption);
   }
 
   if (modelId === "custom") {
@@ -527,10 +555,10 @@ async function refreshDocStatus() {
     const env = await checkPhotoshopEnvironment();
     if (!env.hasDoc) {
       el.docStatusContent.innerHTML = `
-        <div class="status-indicator warning"></div>
-        <div class="status-text">
-          <strong>No Active Document</strong>
-          <span>Open or create an image in Photoshop</span>
+        <div class="status-dot warning"></div>
+        <div class="status-info">
+          <span class="status-title">No Document Active</span>
+          <span class="status-desc">Open an image in Photoshop to begin</span>
         </div>
       `;
       return;
@@ -539,27 +567,27 @@ async function refreshDocStatus() {
     if (env.hasSelection) {
       const b = env.bounds;
       el.docStatusContent.innerHTML = `
-        <div class="status-indicator active"></div>
-        <div class="status-text">
-          <strong>Selection Active (${b.width} × ${b.height}px)</strong>
-          <span>Area: [${b.left}, ${b.top}] to [${b.right}, ${b.bottom}]</span>
+        <div class="status-dot active"></div>
+        <div class="status-info">
+          <span class="status-title">Selection Active (${b.width} × ${b.height}px)</span>
+          <span class="status-desc">Target: [${b.left}, ${b.top}] to [${b.right}, ${b.bottom}]</span>
         </div>
       `;
     } else {
       el.docStatusContent.innerHTML = `
-        <div class="status-indicator active-muted"></div>
-        <div class="status-text">
-          <strong>Document Ready (${env.doc.width} × ${env.doc.height}px)</strong>
-          <span>Full canvas targeted (or make a selection)</span>
+        <div class="status-dot idle"></div>
+        <div class="status-info">
+          <span class="status-title">Full Canvas Active (${env.doc.width} × ${env.doc.height}px)</span>
+          <span class="status-desc">Use Marquee/Lasso to target specific region</span>
         </div>
       `;
     }
   } catch (err) {
     el.docStatusContent.innerHTML = `
-      <div class="status-indicator warning"></div>
-      <div class="status-text">
-        <strong>Status Check</strong>
-        <span>${err.message || err}</span>
+      <div class="status-dot warning"></div>
+      <div class="status-info">
+        <span class="status-title">Status Check</span>
+        <span class="status-desc">${err.message || err}</span>
       </div>
     `;
   }
@@ -592,7 +620,6 @@ async function exportSelectedAreaAsPng(doc, bounds) {
           throw new Error("Unable to read image pixels from Photoshop document.");
         }
 
-        // Encode image data directly to PNG format
         base64Png = await imaging.encodeImageData({
           imageData: pixels.imageData,
           base64: true,
@@ -616,11 +643,10 @@ async function exportSelectedAreaAsPng(doc, bounds) {
 
 /**
  * Creates a new layer above the current layer, inserts the generated image,
- * aligns it to original bounds, and applies Layer Separation (smart mask)
- * matching the Nano Banana V2 workflow.
+ * aligns it to original bounds, and applies Nano Banana V2 Layer Separation.
  * Wrapped in photoshop.core.executeAsModal.
  */
-async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, promptText) {
+async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, promptText, applySeparation) {
   await core.executeAsModal(
     async (context) => {
       const doc = app.activeDocument;
@@ -628,18 +654,17 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
 
       // 1. Write the PNG buffer to a temporary file in UXP storage
       const tempFolder = await storage.localFileSystem.getTemporaryFolder();
-      const tempFileName = `astria_gen_${Date.now()}.png`;
+      const tempFileName = `nanobanana_${Date.now()}.png`;
       const tempFile = await tempFolder.createFile(tempFileName, { overwrite: true });
 
       const rawBuffer = resultBytes.buffer ? resultBytes.buffer : resultBytes;
       await tempFile.write(rawBuffer, { format: storage.formats.binary });
       const sessionToken = storage.localFileSystem.createSessionToken(tempFile);
 
-      // 2. Nano Banana V2 Layer Separation: If an active selection exists,
-      // backup selection to temporary alpha channel before clearing for placement
+      // 2. Nano Banana V2 Layer Separation: Backup selection to temporary channel
       let backedUpSelection = false;
-      const tempChannelName = `__AI_Mask_${Date.now()}`;
-      if (hasSelection) {
+      const tempChannelName = `__NanoBanana_Mask_${Date.now()}`;
+      if (hasSelection && applySeparation) {
         try {
           await action.batchPlay(
             [
@@ -695,7 +720,7 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
       if (placedLayer) {
         try {
           const cleanPrompt = promptText.trim().replace(/[\r\n]+/g, " ");
-          placedLayer.name = `AI Gen: ${cleanPrompt.slice(0, 24)}${cleanPrompt.length > 24 ? "..." : ""}`;
+          placedLayer.name = `Nano Banana: ${cleanPrompt.slice(0, 24)}${cleanPrompt.length > 24 ? "..." : ""}`;
         } catch (e) {}
 
         // 4. BatchPlay: Align and scale to original selection bounds
@@ -739,7 +764,6 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
         // 5. Nano Banana V2 Layer Separation: Re-apply selection & create automated Layer Mask
         if (backedUpSelection) {
           try {
-            // Restore selection from backup channel
             await action.batchPlay(
               [
                 {
@@ -751,7 +775,6 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
               { synchronousExecution: true }
             );
 
-            // Create Layer Mask revealing the exact selection shape
             await action.batchPlay(
               [
                 {
@@ -764,7 +787,6 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
               { synchronousExecution: true }
             );
 
-            // Clean up temporary alpha channel
             await action.batchPlay(
               [
                 {
@@ -775,7 +797,6 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
               { synchronousExecution: true }
             );
 
-            // Clear selection marquee when done
             await action.batchPlay(
               [
                 {
@@ -792,14 +813,12 @@ async function insertAndAlignGeneratedImage(resultBytes, bounds, hasSelection, p
         }
       }
 
-      // 6. Clean up temporary file
+      // Clean up temp file
       try {
         await tempFile.delete();
-      } catch (e) {
-        // Best effort cleanup
-      }
+      } catch (e) {}
     },
-    { commandName: "AI Generative Fill: Layer Separation" }
+    { commandName: "Nano Banana: Edit with Layer Separation" }
   );
 }
 
@@ -811,7 +830,7 @@ function getSelectedModelSlug() {
   if (selected === "custom") {
     const custom = el.customModelInput.value.trim();
     if (!custom) {
-      throw new Error("Custom model selected, but no model slug was entered. Please enter a model slug like 'openai/gpt-image-2'.");
+      throw new Error("Custom model selected, but no model slug was entered.");
     }
     return custom;
   }
@@ -819,7 +838,7 @@ function getSelectedModelSlug() {
 }
 
 /**
- * Primary workflow executor triggered by 'Generate to New Layer'
+ * Primary workflow executor triggered by 'Run Nano Banana Edit'
  */
 async function handleGenerateAction() {
   if (state.isGenerating) return;
@@ -828,16 +847,18 @@ async function handleGenerateAction() {
   const prompt = el.promptText.value.trim();
   const negativePrompt = el.negativePromptText.value.trim();
   const aspectRatioMode = el.aspectRatioSelect.value;
+  const applySeparation = el.layerSeparationToggle.checked;
 
   // Validation
   if (!apiKey) {
-    showStatus("Please enter your OpenRouter API key (sk-or-...).", "error");
+    showStatus("Please enter your OpenRouter API key in settings (⚙️ icon at top right).", "error");
+    el.settingsDrawer.classList.add("open");
     el.apiKeyInput.focus();
     return;
   }
 
   if (!prompt) {
-    showStatus("Please enter a description / prompt for the generation.", "error");
+    showStatus("Please enter an edit prompt describing what to change.", "error");
     el.promptText.focus();
     return;
   }
@@ -855,22 +876,22 @@ async function handleGenerateAction() {
 
   try {
     // Step 1: Check document and selection
-    showStatus("Analyzing Photoshop document and selection...", "info", 10);
+    showStatus("Reading Photoshop canvas & active selection...", "info", 10);
     const env = await checkPhotoshopEnvironment();
     if (!env.hasDoc) {
-      throw new Error("No active document in Photoshop. Please open an image or create a canvas first.");
+      throw new Error("No active document in Photoshop. Please open an image first.");
     }
 
     const { doc, hasSelection, bounds } = env;
 
-    // Step 2: If selection exists, export selected area pixels as PNG bytes
+    // Step 2: Export selected area pixels
     let selectionBase64 = null;
     if (hasSelection) {
-      showStatus(`Exporting selected region (${bounds.width}×${bounds.height}px)...`, "info", 25);
+      showStatus(`Exporting selection context (${bounds.width}×${bounds.height}px)...`, "info", 25);
       selectionBase64 = await exportSelectedAreaAsPng(doc, bounds);
     }
 
-    // Step 3: Determine Aspect Ratio
+    // Step 3: Aspect Ratio
     let effectiveAspectRatio = "1:1";
     if (aspectRatioMode === "auto") {
       effectiveAspectRatio = calculateClosestAspectRatio(bounds.width, bounds.height);
@@ -878,8 +899,8 @@ async function handleGenerateAction() {
       effectiveAspectRatio = aspectRatioMode;
     }
 
-    // Step 4: Send request to OpenRouter API
-    showStatus(`Sending request to OpenRouter (${effectiveModel}, ${effectiveAspectRatio})...`, "info", 45);
+    // Step 4: OpenRouter API Call
+    showStatus(`Calling ${effectiveModel.split("/")[1] || effectiveModel}...`, "info", 45);
 
     const apiResult = await generateImage({
       apiKey,
@@ -891,15 +912,15 @@ async function handleGenerateAction() {
       selectionImageBase64: selectionBase64,
     });
 
-    // Step 5: Insert generated image, align bounds, and apply Layer Separation
-    showStatus("Applying Layer Separation & alignment in Photoshop...", "info", 80);
+    // Step 5: Placement & Layer Separation
+    showStatus("Placing Smart Object & applying Layer Separation...", "info", 80);
 
-    await insertAndAlignGeneratedImage(apiResult.bytes, bounds, hasSelection, prompt);
+    await insertAndAlignGeneratedImage(apiResult.bytes, bounds, hasSelection, prompt, applySeparation);
 
-    showStatus("Generation complete! Layer created with non-destructive layer mask.", "success", 100);
+    showStatus("Complete! Non-destructive edit layer created.", "success", 100);
     refreshDocStatus();
   } catch (err) {
-    console.error("Generative Fill Error:", err);
+    console.error("Nano Banana Edit Error:", err);
     showStatus(err.message || String(err), "error");
   } finally {
     setLoading(false);
@@ -913,14 +934,16 @@ function setLoading(loading) {
   state.isGenerating = loading;
   el.generateBtn.disabled = loading;
   if (loading) {
-    if (el.sparkleBtnIcon) el.sparkleBtnIcon.style.display = "none";
     if (el.generateSpinner) el.generateSpinner.style.display = "inline-block";
-    el.generateBtnText.textContent = "Generating...";
+    el.generateBtnText.textContent = "Processing Edit...";
     if (el.progressBarTrack) el.progressBarTrack.style.display = "block";
   } else {
     if (el.generateSpinner) el.generateSpinner.style.display = "none";
-    if (el.sparkleBtnIcon) el.sparkleBtnIcon.style.display = "inline-block";
-    el.generateBtnText.textContent = "Generate to New Layer";
+    if (state.activeMode === "inpaint") {
+      el.generateBtnText.textContent = "🍌 Run Nano Banana Edit";
+    } else {
+      el.generateBtnText.textContent = "✨ Generate New Layer";
+    }
     setTimeout(() => {
       if (el.progressBarTrack) el.progressBarTrack.style.display = "none";
       if (el.progressBar) el.progressBar.style.width = "0%";

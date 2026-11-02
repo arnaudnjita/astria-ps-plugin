@@ -3,159 +3,192 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Astria Generative Fill</title>
+  <title>Nano Banana Pro V2</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <!-- Header -->
   <header class="app-header">
-    <div class="brand-wrapper">
-      <svg class="brand-logo-icon" viewBox="0 0 24 24">
-        <path d="M12 2L14.4 7.6L20 10L14.4 12.4L12 18L9.6 12.4L4 10L9.6 7.6L12 2Z" />
-      </svg>
-      <span class="brand-title">Generative Fill</span>
+    <div class="brand-group">
+      <div class="brand-logo-badge">🍌</div>
+      <div class="brand-text">
+        <span class="brand-title">Nano Banana</span>
+        <span class="brand-subtitle">Pro V2 • OpenRouter</span>
+      </div>
     </div>
-    <span class="brand-badge">OpenRouter</span>
+    <div class="header-actions">
+      <button type="button" class="btn-icon-header" id="settingsToggleBtn" title="API Settings">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#a3a3a3">
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
-  <!-- Live Document & Selection Status -->
-  <div class="doc-status-box">
-    <div class="status-indicator-group" id="docStatusContent">
-      <div class="status-indicator active-muted"></div>
-      <div class="status-text">
-        <strong>Checking Photoshop...</strong>
-        <span>Querying active document & selection</span>
-      </div>
-    </div>
-    <button type="button" class="btn-icon-subtle" id="refreshStatusBtn" title="Refresh Document & Selection Status">
-      <svg viewBox="0 0 24 24">
-        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- OpenRouter API Key Setting -->
-  <div class="form-group">
-    <div class="form-label-row">
-      <span>OpenRouter API Key</span>
-      <div class="label-side-actions">
+  <!-- Collapsible Settings Drawer -->
+  <div class="settings-drawer" id="settingsDrawer">
+    <div class="settings-header">
+      <span>OpenRouter Configuration</span>
+      <div>
         <span class="save-key-badge" id="saveKeyBadge">Saved</span>
-        <a href="https://openrouter.ai/keys" target="_blank" class="label-link" title="Get OpenRouter API key">
-          Get Key ↗
-        </a>
+        <a href="https://openrouter.ai/keys" target="_blank" style="color: var(--banana-yellow); text-decoration: none; font-size: 9.5px; margin-left: 6px;">Get Key ↗</a>
       </div>
     </div>
-    <div class="input-with-action">
+    <div class="password-wrap">
       <input
         type="password"
         id="apiKeyInput"
         class="input-text"
-        placeholder="sk-or-v1-..."
+        placeholder="Enter OpenRouter API Key (sk-or-v1-...)"
         autocomplete="off"
         spellcheck="false"
       />
-      <button type="button" class="toggle-visibility-btn" id="toggleApiKeyBtn" title="Show/Hide API Key">
-        <svg id="eyeIcon" viewBox="0 0 24 24">
+      <button type="button" class="btn-toggle-eye" id="toggleApiKeyBtn" title="Show/Hide">
+        <svg id="eyeIcon" width="13" height="13" viewBox="0 0 24 24" fill="#a3a3a3">
           <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
         </svg>
       </button>
     </div>
   </div>
 
-  <!-- Model & Aspect Ratio Row -->
+  <!-- Workflow Mode Tabs (Nano Banana V2 Style) -->
+  <div class="mode-tabs-container">
+    <button type="button" class="mode-tab active" data-mode="inpaint">Inpaint / Edit</button>
+    <button type="button" class="mode-tab" data-mode="generate">Generate</button>
+    <button type="button" class="mode-tab" data-mode="separation">Layer Separation</button>
+  </div>
+
+  <!-- Live Selection / Document Status -->
+  <div class="status-bar-card">
+    <div class="status-left" id="docStatusContent">
+      <div class="status-dot idle"></div>
+      <div class="status-info">
+        <span class="status-title">Checking Photoshop...</span>
+        <span class="status-desc">Reading active document & selection</span>
+      </div>
+    </div>
+    <button type="button" class="btn-refresh" id="refreshStatusBtn" title="Refresh Document & Selection Status">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="#a3a3a3">
+        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Model & Aspect Ratio Controls -->
   <div class="form-group">
     <div class="row">
       <div class="col">
         <div class="form-label-row">
-          <span>Model</span>
-          <button type="button" class="btn-more-models" id="moreModelsBtn" title="Browse all 60+ OpenRouter image models">
-            <span>More (60+)</span>
-            <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          <span class="form-label">Model Engine</span>
+          <button type="button" class="label-action-btn" id="moreModelsBtn" title="Explore 60+ models">
+            Browse (60+) ▾
           </button>
         </div>
-        <div class="select-wrapper">
-          <select id="modelSelect" class="select-input">
-            <!-- Top 6 Curated Models for High Consistency -->
-            <optgroup label="Top 6 Recommended Models">
-              <option value="google/gemini-nano-banana-2.1" selected>Google: Nano Banana 2.1 (Fast & Consistent)</option>
-              <option value="black-forest-labs/flux-3-image">FLUX 3 Image (Black Forest Labs - Photoreal)</option>
-              <option value="openai/gpt-image-2">OpenAI: GPT Image 2 (High Adherence)</option>
-              <option value="bytedance-seed/seedream-5-0-pro">Seedream 5.0 Pro (ByteDance - Artistic)</option>
-              <option value="krea/k3-edit">Krea: K3 Edit (Inpainting & Generative Fill)</option>
-              <option value="recraft/recraft-v4.1">Recraft: v4.1 (Design & Detail)</option>
-            </optgroup>
-            <!-- Dynamically selected models or custom -->
-            <optgroup label="Other Models" id="otherModelsOptGroup" style="display: none;"></optgroup>
-            <option value="custom">Custom model slug...</option>
-          </select>
-          <svg class="select-arrow" viewBox="0 0 24 24">
-            <path d="M7 10l5 5 5-5z"/>
-          </svg>
-        </div>
+        <select id="modelSelect" class="select-input">
+          <option value="google/gemini-nano-banana-2.1" selected>Google: Nano Banana 2.1 (Fast & Consistent)</option>
+          <option value="black-forest-labs/flux-3-image">FLUX 3 Image (Black Forest Labs)</option>
+          <option value="openai/gpt-image-2">OpenAI: GPT Image 2 (Adherence)</option>
+          <option value="bytedance-seed/seedream-5-0-pro">ByteDance: Seedream 5.0 Pro</option>
+          <option value="krea/k3-edit">Krea: K3 Edit (Inpainting)</option>
+          <option value="recraft/recraft-v4.1">Recraft: v4.1 (Clean Details)</option>
+          <option value="custom">Custom model slug...</option>
+        </select>
       </div>
       <div class="col">
         <div class="form-label-row">
-          <span>Aspect Ratio</span>
+          <span class="form-label">Aspect Ratio</span>
         </div>
-        <div class="select-wrapper">
-          <select id="aspectRatioSelect" class="select-input">
-            <option value="auto" selected>Auto (From Selection)</option>
-            <option value="1:1">1:1 Square</option>
-            <option value="4:3">4:3 Landscape</option>
-            <option value="3:4">3:4 Portrait</option>
-            <option value="16:9">16:9 Widescreen</option>
-            <option value="9:16">9:16 Vertical</option>
-          </select>
-          <svg class="select-arrow" viewBox="0 0 24 24">
-            <path d="M7 10l5 5 5-5z"/>
-          </svg>
-        </div>
+        <select id="aspectRatioSelect" class="select-input">
+          <option value="auto" selected>Auto (From Selection)</option>
+          <option value="1:1">1:1 Square</option>
+          <option value="4:3">4:3 Landscape</option>
+          <option value="3:4">3:4 Portrait</option>
+          <option value="16:9">16:9 Widescreen</option>
+          <option value="9:16">9:16 Vertical</option>
+        </select>
       </div>
     </div>
 
-    <!-- Custom Model Input (shown when 'Custom model...' is selected) -->
+    <!-- Custom Model Input -->
     <div class="custom-model-container" id="customModelContainer">
-      <div class="form-label-row" style="margin-top: 5px;">
-        <span>Custom Model Slug</span>
-      </div>
       <input
         type="text"
         id="customModelInput"
         class="input-text"
-        placeholder="e.g. black-forest-labs/flux-1-schnell"
+        placeholder="Enter OpenRouter model slug (e.g. black-forest-labs/flux-1-schnell)"
         spellcheck="false"
       />
     </div>
   </div>
 
-  <!-- Prompt Input -->
+  <!-- Prompt Composer -->
   <div class="form-group">
     <div class="form-label-row">
-      <span>Prompt</span>
+      <span class="form-label">Edit Prompt</span>
     </div>
     <textarea
       id="promptText"
       class="textarea-input"
       rows="2"
-      placeholder="Describe what to generate or add to the selection..."
+      placeholder="Describe the edit or what to generate in the selection..."
       spellcheck="false"
     ></textarea>
     
-    <!-- Quick Preset Tags -->
-    <div class="preset-chips">
-      <span class="preset-tag" data-prompt="photorealistic, 8k, cinematic lighting">Photoreal</span>
-      <span class="preset-tag" data-prompt="cyberpunk neon style, detailed render">Cyberpunk</span>
-      <span class="preset-tag" data-prompt="clean studio lighting, minimal">Studio</span>
-      <span class="preset-tag" data-prompt="lush fantasy concept art">Fantasy</span>
-      <span class="preset-tag" data-prompt="seamless matching texture and ambient light">Seamless Blend</span>
+    <!-- Quick Modifiers -->
+    <div class="prompt-chips-wrap">
+      <span class="chip-tag" data-prompt="photorealistic, 8k, natural lighting">Photoreal</span>
+      <span class="chip-tag" data-prompt="seamless edge blending, match scene lighting">Seamless Blend</span>
+      <span class="chip-tag" data-prompt="clean studio lighting, professional">Studio</span>
+      <span class="chip-tag" data-prompt="cyberpunk neon style, detailed octane render">Cyberpunk</span>
+      <span class="chip-tag" data-prompt="remove unwanted objects, clean background fill">Clean Fill</span>
     </div>
   </div>
 
-  <!-- Negative Prompt Input -->
+  <!-- Reference / Context Conditioning -->
   <div class="form-group">
     <div class="form-label-row">
-      <span>Negative Prompt</span>
-      <span style="font-size: 9px; color: var(--text-tertiary); text-transform: none;">Optional</span>
+      <span class="form-label">Reference Context</span>
+      <span style="font-size: 9px; color: var(--text-tertiary);">Optional</span>
+    </div>
+    <input type="file" id="refImageInput" accept="image/png, image/jpeg, image/webp" style="display: none;" />
+    
+    <!-- Upload Drop Slot -->
+    <div class="reference-slot-card" id="refUploadArea">
+      <div class="ref-slot-content">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#a3a3a3">
+          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+        </svg>
+        <div class="ref-slot-text">
+          <span class="ref-slot-title">Drag & Drop or Choose Image</span>
+          <span class="ref-slot-sub">PNG, JPEG, WebP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preview Box -->
+    <div class="ref-preview-box" id="refPreviewContainer">
+      <img id="refPreviewImg" class="ref-preview-img" alt="Reference Preview" />
+      <button type="button" class="btn-remove-ref" id="clearRefBtn" title="Remove reference">✕</button>
+    </div>
+  </div>
+
+  <!-- V2 Layer Separation Toggle -->
+  <div class="separation-toggle-row">
+    <div class="toggle-label-wrap">
+      <span class="toggle-main-label">Layer Separation</span>
+      <span class="toggle-sub-label">Creates Smart Object + automated Layer Mask</span>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="layerSeparationToggle" checked />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- Negative Prompt (Collapsible) -->
+  <div class="form-group">
+    <div class="form-label-row">
+      <span class="form-label">Negative Prompt</span>
+      <span style="font-size: 9px; color: var(--text-tertiary);">Avoid</span>
     </div>
     <input
       type="text"
@@ -167,81 +200,36 @@
     />
   </div>
 
-  <!-- Reference Image Picker -->
-  <div class="form-group">
-    <div class="form-label-row">
-      <span>Reference Image</span>
-      <span style="font-size: 9px; color: var(--text-tertiary); text-transform: none;">Optional</span>
-    </div>
-    <input type="file" id="refImageInput" accept="image/png, image/jpeg, image/webp" style="display: none;" />
-    
-    <!-- Upload Drop Zone -->
-    <div class="upload-drop-zone" id="refUploadArea">
-      <div class="upload-content">
-        <svg class="upload-icon-svg" viewBox="0 0 24 24">
-          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-        </svg>
-        <div class="upload-text-group">
-          <span class="upload-title">Choose Reference Image</span>
-          <span class="upload-subtitle">PNG, JPEG, WebP</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Uploaded Thumbnail Preview -->
-    <div class="ref-preview-container" id="refPreviewContainer">
-      <img id="refPreviewImg" class="ref-preview-img" alt="Reference Preview" />
-      <button type="button" class="btn-remove-preview" id="clearRefBtn" title="Remove reference image">
-        <svg viewBox="0 0 24 24">
-          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-        </svg>
-      </button>
-    </div>
-  </div>
-
-  <!-- Action Area -->
-  <div class="action-area">
-    <button type="button" id="generateBtn" class="btn-primary">
+  <!-- Primary Action Area -->
+  <div class="action-box">
+    <button type="button" id="generateBtn" class="btn-generate-main">
       <span class="spinner" id="generateSpinner"></span>
-      <svg class="btn-sparkle-icon" viewBox="0 0 24 24" id="sparkleBtnIcon">
-        <path d="M12 2L14.4 7.6L20 10L14.4 12.4L12 18L9.6 12.4L4 10L9.6 7.6L12 2Z" />
-      </svg>
-      <span id="generateBtnText">Generate to New Layer</span>
+      <span id="generateBtnText">🍌 Run Nano Banana Edit</span>
     </button>
 
-    <!-- Progress Indicator -->
+    <!-- Progress Track -->
     <div class="progress-track" id="progressBarTrack">
       <div class="progress-bar" id="progressBar"></div>
     </div>
 
-    <!-- Status / Error Notification -->
+    <!-- Status Message -->
     <div class="status-msg" id="statusMessage"></div>
   </div>
 
   <!-- Footer Info -->
   <footer class="app-footer">
-    OpenRouter API • Native UXP Panel
+    Nano Banana Pro Architecture • Astria & OpenRouter
   </footer>
 
-  <!-- More Models Explorer Modal -->
+  <!-- 60+ Models Explorer Modal -->
   <div class="modal-backdrop" id="modelsModal">
     <div class="modal-container">
       <div class="modal-header">
-        <div class="modal-title-wrap">
-          <span class="modal-title">OpenRouter Image Models</span>
-          <span class="modal-count-badge" id="modelsCountBadge">60+ Models</span>
-        </div>
-        <button type="button" class="btn-close-modal" id="closeModalBtn" title="Close">
-          <svg viewBox="0 0 24 24">
-            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-          </svg>
-        </button>
+        <span class="modal-title">OpenRouter Image Models Catalog</span>
+        <button type="button" class="btn-close-modal" id="closeModalBtn" title="Close">✕</button>
       </div>
       <div class="modal-search-bar">
-        <svg class="modal-search-icon" viewBox="0 0 24 24">
-          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-        </svg>
-        <input type="text" id="modelSearchInput" class="modal-search-input" placeholder="Search by model or provider..." />
+        <input type="text" id="modelSearchInput" class="modal-search-input" placeholder="Search 60+ models by name or provider..." />
       </div>
       <div class="modal-filter-pills" id="modalFilterPills">
         <button type="button" class="filter-pill active" data-filter="all">All</button>
