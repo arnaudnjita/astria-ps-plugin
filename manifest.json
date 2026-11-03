@@ -7,7 +7,10 @@
   "host": [
     {
       "app": "PS",
-      "minVersion": "24.0.0"
+      "minVersion": "24.0.0",
+      "data": {
+        "apiVersion": 2
+      }
     }
   ],
   "entrypoints": [
@@ -15,6 +18,9 @@
       "type": "panel",
       "id": "generativeFillPanel",
       "name": "Nano-Banana",
+      "label": {
+        "default": "Nano-Banana"
+      },
       "minimumSize": {
         "width": 260,
         "height": 380
@@ -42,7 +48,8 @@
     "localFileSystem": "fullAccess",
     "network": {
       "domains": [
-        "https://openrouter.ai"
+        "https://openrouter.ai",
+        "https://*.openrouter.ai"
       ]
     }
   },

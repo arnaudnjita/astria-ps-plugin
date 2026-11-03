@@ -50,17 +50,6 @@ html, body {
   overflow-y: auto;
 }
 
-/* Base button override to prevent UXP host style interference */
-button {
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  border: none;
-  background: transparent;
-  font-family: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
@@ -68,6 +57,27 @@ button {
 ::-webkit-scrollbar-thumb {
   background: #333333;
   border-radius: 4px;
+}
+
+/* Base interactive elements */
+[role="button"], button {
+  cursor: pointer;
+  user-select: none;
+}
+[role="button"] * {
+  pointer-events: none;
+}
+.menu-item {
+  pointer-events: auto;
+}
+.style-chip {
+  pointer-events: auto;
+}
+.settings-drawer input, .settings-drawer a, .settings-drawer label {
+  pointer-events: auto;
+}
+.custom-modal-backdrop input, .custom-modal-backdrop [role="button"] {
+  pointer-events: auto;
 }
 
 .nano-app-container {
@@ -136,13 +146,13 @@ button {
 }
 
 .pill-btn {
-  background: var(--bg-pill) !important;
-  border: 1px solid var(--border-pill) !important;
-  color: var(--text-main) !important;
+  background-color: var(--bg-pill);
+  border: 1px solid var(--border-pill);
+  color: var(--text-main);
   font-size: 11px;
   font-weight: 500;
   padding: 5px 10px;
-  border-radius: var(--radius-pill) !important;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -151,8 +161,8 @@ button {
 }
 
 .pill-btn:hover {
-  background: var(--bg-pill-hover) !important;
-  border-color: #555555 !important;
+  background-color: var(--bg-pill-hover);
+  border-color: #555555;
 }
 
 .pill-btn:active {
@@ -166,9 +176,9 @@ button {
 }
 
 .avatar-pill {
-  background: var(--bg-pill) !important;
-  border: 1px solid var(--border-pill) !important;
-  border-radius: var(--radius-pill) !important;
+  background-color: var(--bg-pill);
+  border: 1px solid var(--border-pill);
+  border-radius: var(--radius-pill);
   padding: 3px 6px 3px 4px;
   display: flex;
   align-items: center;
@@ -178,15 +188,15 @@ button {
 }
 
 .avatar-pill:hover {
-  background: var(--bg-pill-hover) !important;
+  background-color: var(--bg-pill-hover);
 }
 
 .avatar-circle {
   width: 19px;
   height: 19px;
   border-radius: 50%;
-  background: #dc2626 !important;
-  color: #ffffff !important;
+  background-color: #dc2626;
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
   display: inline-flex;
@@ -200,22 +210,11 @@ button {
 .settings-drawer,
 .history-drawer {
   display: none;
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-card);
   padding: 12px;
   margin-bottom: 12px;
-  animation: fadeIn 0.16s ease-out;
-}
-
-.settings-drawer.open,
-.history-drawer.open {
-  display: block;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .drawer-header {
@@ -251,7 +250,7 @@ button {
 
 .clean-input {
   width: 100%;
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 7px 9px;
@@ -379,21 +378,21 @@ input:checked + .slider:before {
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  background: var(--bg-input);
+  background-color: var(--bg-input);
   border-radius: var(--radius-sm);
   margin-bottom: 6px;
   cursor: pointer;
   transition: var(--transition);
 }
 .history-item:hover {
-  background: #2a2a2a;
+  background-color: #2a2a2a;
 }
 .history-thumb {
   width: 32px;
   height: 32px;
   border-radius: 4px;
   object-fit: cover;
-  background: #111;
+  background-color: #111;
 }
 .history-info {
   display: flex;
@@ -417,7 +416,7 @@ input:checked + .slider:before {
    MAIN UNIFIED AI PROMPT CARD (THE CARD)
    ========================================= */
 .nano-main-card {
-  background: var(--bg-card);
+  background-color: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius-card);
   padding: 14px 14px 12px 14px;
@@ -439,7 +438,7 @@ input:checked + .slider:before {
   height: 64px;
   border-radius: var(--radius-thumb);
   position: relative;
-  background: #181818;
+  background-color: #181818;
   border: 1px solid #3d3d3d;
   display: none;
   flex-shrink: 0;
@@ -460,7 +459,7 @@ input:checked + .slider:before {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #3f3f46;
+  background-color: #3f3f46;
   border: 1px solid #52525b;
   color: #ffffff;
   font-size: 9px;
@@ -472,7 +471,7 @@ input:checked + .slider:before {
 }
 
 .btn-remove-thumb:hover {
-  background: #ef4444;
+  background-color: #ef4444;
   border-color: #ef4444;
 }
 
@@ -480,23 +479,23 @@ input:checked + .slider:before {
   width: 64px;
   height: 64px;
   border-radius: var(--radius-thumb);
-  border: 1px dashed #4b4b4b !important;
-  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px dashed #4b4b4b;
+  background-color: rgba(255, 255, 255, 0.02);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: var(--text-muted) !important;
+  color: var(--text-muted);
   cursor: pointer;
   transition: var(--transition);
   flex-shrink: 0;
 }
 
 .add-image-card:hover {
-  border-color: #71717a !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: #ffffff !important;
+  border-color: #71717a;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
 }
 
 .add-image-card:active {
@@ -517,10 +516,10 @@ input:checked + .slider:before {
 
 .prompt-textarea {
   width: 100%;
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  color: #ffffff !important;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
   font-family: inherit;
   font-size: 14.5px;
   font-weight: 500;
@@ -542,17 +541,13 @@ input:checked + .slider:before {
   gap: 4px;
   margin-bottom: 10px;
   padding: 6px;
-  background: #1f1f1f;
+  background-color: #1f1f1f;
   border-radius: 8px;
   border: 1px solid #333333;
 }
 
-.style-palette-drawer.open {
-  display: flex;
-}
-
 .style-chip {
-  background: #2b2b2b;
+  background-color: #2b2b2b;
   border: 1px solid #3a3a3a;
   color: #d4d4d8;
   font-size: 9.5px;
@@ -563,14 +558,14 @@ input:checked + .slider:before {
 }
 
 .style-chip:hover {
-  background: #383838;
+  background-color: #383838;
   color: var(--banana-yellow);
 }
 
 /* Result / Status Notification Banner */
 .result-banner {
-  background: var(--success-bg) !important;
-  border: 1px solid var(--success-border) !important;
+  background-color: var(--success-bg);
+  border: 1px solid var(--success-border);
   border-radius: 10px;
   padding: 7px 10px;
   display: flex;
@@ -593,31 +588,31 @@ input:checked + .slider:before {
 .result-text {
   font-size: 11px;
   font-weight: 500;
-  color: var(--success-text) !important;
+  color: var(--success-text);
   line-height: 1.35;
   word-break: break-word;
 }
 
 .result-banner.error {
-  background: rgba(239, 68, 68, 0.15) !important;
-  border-color: rgba(239, 68, 68, 0.4) !important;
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
 }
 .result-banner.error .banner-icon-wrap {
   color: #f87171;
 }
 .result-banner.error .result-text {
-  color: #fca5a5 !important;
+  color: #fca5a5;
 }
 
 .result-banner.info {
-  background: rgba(56, 189, 248, 0.15) !important;
-  border-color: rgba(56, 189, 248, 0.4) !important;
+  background-color: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
 }
 .result-banner.info .banner-icon-wrap {
   color: #38bdf8;
 }
 .result-banner.info .result-text {
-  color: #bae6fd !important;
+  color: #bae6fd;
 }
 
 /* =========================================
@@ -645,13 +640,13 @@ input:checked + .slider:before {
 }
 
 .toolbar-pill {
-  background: var(--bg-pill) !important;
-  border: 1px solid var(--border-pill) !important;
-  color: #e4e4e7 !important;
+  background-color: var(--bg-pill);
+  border: 1px solid var(--border-pill);
+  color: #e4e4e7;
   font-size: 11px;
   font-weight: 500;
   padding: 5px 8px;
-  border-radius: var(--radius-pill) !important;
+  border-radius: var(--radius-pill);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -661,9 +656,9 @@ input:checked + .slider:before {
 }
 
 .toolbar-pill:hover {
-  background: var(--bg-pill-hover) !important;
-  border-color: #555555 !important;
-  color: #ffffff !important;
+  background-color: var(--bg-pill-hover);
+  border-color: #555555;
+  color: #ffffff;
 }
 
 .toolbar-pill:active {
@@ -671,12 +666,12 @@ input:checked + .slider:before {
 }
 
 .toolbar-icon-btn {
-  background: var(--bg-pill) !important;
-  border: 1px solid var(--border-pill) !important;
-  color: #e4e4e7 !important;
+  background-color: var(--bg-pill);
+  border: 1px solid var(--border-pill);
+  color: #e4e4e7;
   width: 27px;
   height: 27px;
-  border-radius: 50% !important;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -686,9 +681,9 @@ input:checked + .slider:before {
 }
 
 .toolbar-icon-btn:hover {
-  background: var(--bg-pill-hover) !important;
-  border-color: #555555 !important;
-  color: #ffffff !important;
+  background-color: var(--bg-pill-hover);
+  border-color: #555555;
+  color: #ffffff;
 }
 
 .toolbar-icon-btn:active {
@@ -700,7 +695,7 @@ input:checked + .slider:before {
   position: absolute;
   bottom: calc(100% + 6px);
   left: 0;
-  background: #242424;
+  background-color: #242424;
   border: 1px solid #3d3d3d;
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
@@ -710,18 +705,8 @@ input:checked + .slider:before {
   display: none;
 }
 
-.pill-menu.open {
-  display: block;
-  animation: popUp 0.14s ease-out;
-}
-
 .pill-menu.compact {
   min-width: 120px;
-}
-
-@keyframes popUp {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 
 .menu-item {
@@ -735,12 +720,12 @@ input:checked + .slider:before {
 }
 
 .menu-item:hover {
-  background: #333333;
+  background-color: #333333;
   color: #ffffff;
 }
 
 .menu-item.active {
-  background: rgba(245, 158, 11, 0.2);
+  background-color: rgba(245, 158, 11, 0.2);
   color: var(--banana-yellow);
   font-weight: 600;
 }
@@ -755,10 +740,10 @@ input:checked + .slider:before {
    DISTINCTIVE WHITE SEND PILL (↑ ▾)
    ========================================= */
 .btn-send-pill {
-  background: #ffffff !important;
+  background-color: #ffffff !important;
   color: #000000 !important;
-  border: none !important;
-  border-radius: 20px !important;
+  border: none;
+  border-radius: 20px;
   padding: 6px 14px;
   display: flex;
   align-items: center;
@@ -768,12 +753,10 @@ input:checked + .slider:before {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   transition: var(--transition);
   flex-shrink: 0;
-  -webkit-appearance: none !important;
-  appearance: none !important;
 }
 
 .btn-send-pill:hover:not(:disabled) {
-  background: #f4f4f5 !important;
+  background-color: #f4f4f5 !important;
   transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
@@ -782,17 +765,11 @@ input:checked + .slider:before {
   transform: scale(0.96);
 }
 
-.btn-send-pill:disabled {
-  background: #52525b !important;
-  color: #a1a1aa !important;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
 .arrow-icon {
   font-size: 15px;
   font-weight: 800;
   line-height: 1;
+  color: #000000;
 }
 
 .arrow-caret {
@@ -821,7 +798,7 @@ input:checked + .slider:before {
 .custom-modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background-color: rgba(0, 0, 0, 0.75);
   display: none;
   align-items: center;
   justify-content: center;
@@ -829,12 +806,8 @@ input:checked + .slider:before {
   padding: 12px;
 }
 
-.custom-modal-backdrop.open {
-  display: flex;
-}
-
 .custom-modal-box {
-  background: #242424;
+  background-color: #242424;
   border: 1px solid #3d3d3d;
   border-radius: 12px;
   padding: 14px;
@@ -868,20 +841,20 @@ input:checked + .slider:before {
 }
 
 .btn-secondary {
-  background: #333 !important;
-  color: #d4d4d8 !important;
+  background-color: #333;
+  color: #d4d4d8;
 }
 .btn-secondary:hover {
-  background: #444 !important;
+  background-color: #444;
 }
 
 .btn-primary {
-  background: var(--banana-accent) !important;
-  color: #000 !important;
+  background-color: var(--banana-accent);
+  color: #000;
   font-weight: 600;
 }
 .btn-primary:hover {
-  background: var(--banana-yellow) !important;
+  background-color: var(--banana-yellow);
 }
 
 /* =========================================

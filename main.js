@@ -3,6 +3,37 @@
  * Unified AI Prompt Card with Masked Smart Object Layer Separation
  */
 
+// Global Error Catching for instant visibility in Photoshop UXP
+window.onerror = function (message, source, lineno, colno, error) {
+  console.error("Nano-Banana error at line", lineno, message, error);
+  const resultText = document.getElementById("resultText");
+  const resultBanner = document.getElementById("resultBanner");
+  if (resultText && resultBanner) {
+    resultText.textContent = `Error (line ${lineno}): ${message}`;
+    resultBanner.className = "result-banner error";
+  }
+};
+
+// Application State & Globals initialized early
+var isBooted = false;
+var el = {};
+var state = {
+  apiKey: "",
+  prompt: "Replace the earring",
+  negativePrompt: "blurry, low quality, distorted, artifacts",
+  model: "openai/gpt-image-2.5-sunburst",
+  modelDisplayName: "GPT Image 2.5 Sunburst",
+  count: 1,
+  resolution: "2K",
+  quality: "Medium",
+  layerSeparation: true,
+  referenceImageBase64: null,
+  isSelectionActive: false,
+  selectionBounds: null,
+  isGenerating: false,
+  history: [],
+};
+
 // Safe environment detection for Photoshop UXP and browser/preview contexts
 let photoshop = {};
 let uxp = {};
@@ -23,6 +54,37 @@ const core = photoshop.core || {};
 const action = photoshop.action || {};
 const imaging = photoshop.imaging || {};
 const storage = uxp.storage || {};
+const entrypoints = uxp.entrypoints || null;
+
+// Register UXP Entrypoints for Manifest v5 Lifecycle
+if (entrypoints && typeof entrypoints.setup === "function") {
+  try {
+    entrypoints.setup({
+      plugin: {
+        create() {
+          console.log("Nano-Banana plugin created");
+        },
+        destroy() {
+          console.log("Nano-Banana plugin destroyed");
+        }
+      },
+      panels: {
+        generativeFillPanel: {
+          create() {
+            console.log("Nano-Banana panel created");
+          },
+          show() {
+            console.log("Nano-Banana panel shown via entrypoints");
+            boot();
+          },
+          hide() {}
+        }
+      }
+    });
+  } catch (entryErr) {
+    console.warn("entrypoints.setup warning:", entryErr);
+  }
+}
 
 // Import API module
 let apiModule = {};
@@ -64,38 +126,22 @@ const safeStorage = {
   }
 };
 
-// Application State
-let state = {
-  apiKey: "",
-  prompt: "Replace the earring",
-  negativePrompt: "blurry, low quality, distorted, artifacts",
-  model: "openai/gpt-image-2.5-sunburst",
-  modelDisplayName: "GPT Image 2.5 Sunburst",
-  count: 1,
-  resolution: "2K",
-  quality: "Medium",
-  layerSeparation: true,
-  referenceImageBase64: null,
-  isSelectionActive: false,
-  selectionBounds: null,
-  isGenerating: false,
-  history: [],
-};
-
-// UI Elements cache
-let el = {};
-
 /**
  * Bootstraps the application immediately or on DOMContentLoaded
  */
 function boot() {
+  if (isBooted) {
+    refreshPhotoshopContext();
+    return;
+  }
   try {
     console.log("Nano-Banana: Initializing UI...");
     initUI();
     attachEventListeners();
-    attachDelegatedListeners();
+    attachOutsideClickListener();
     loadSettings();
     refreshPhotoshopContext();
+    isBooted = true;
     console.log("Nano-Banana: Ready & Fully Responsive!");
   } catch (err) {
     console.error("Nano-Banana boot error:", err);
@@ -172,18 +218,17 @@ function initUI() {
 }
 
 /**
- * Safe helper to attach event listener
+ * Robust helper to attach click handler ensuring single execution and maximum compatibility
  */
-function safeListen(element, event, handler) {
-  if (element && typeof element.addEventListener === "function") {
-    try {
-      element.addEventListener(event, handler);
-      return true;
-    } catch (e) {
-      console.warn("safeListen error:", e);
+function bindButton(element, handler) {
+  if (!element) return;
+  element.onclick = (e) => {
+    if (e) {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      if (typeof e.stopPropagation === "function") e.stopPropagation();
     }
-  }
-  return false;
+    handler(e);
+  };
 }
 
 /**
@@ -191,7 +236,7 @@ function safeListen(element, event, handler) {
  */
 function toggleDrawer(drawerEl) {
   if (!drawerEl) return;
-  const isVisible = drawerEl.style.display === "block" || drawerEl.classList.contains("open");
+  const isVisible = drawerEl.style.display === "block";
   drawerEl.style.display = isVisible ? "none" : "block";
   if (isVisible) {
     drawerEl.classList.remove("open");
@@ -205,7 +250,7 @@ function toggleDrawer(drawerEl) {
  */
 function toggleMenu(menuEl) {
   if (!menuEl) return;
-  const isVisible = menuEl.style.display === "block" || menuEl.classList.contains("open");
+  const isVisible = menuEl.style.display === "block";
   closeAllMenus();
   if (!isVisible) {
     menuEl.style.display = "block";
@@ -225,21 +270,20 @@ function closeAllMenus() {
  */
 function attachEventListeners() {
   // Toggle Settings Drawer (Avatar S)
-  safeListen(el.btnSettingsToggle, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnSettingsToggle, (e) => {
     closeAllMenus();
-    toggleDrawer(el.settingsDrawer);
     if (el.historyDrawer) {
       el.historyDrawer.style.display = "none";
       el.historyDrawer.classList.remove("open");
     }
+    toggleDrawer(el.settingsDrawer);
     if (el.settingsDrawer && el.settingsDrawer.style.display === "block" && el.apiKeyInput) {
-      el.apiKeyInput.focus();
+      setTimeout(() => el.apiKeyInput.focus(), 50);
     }
   });
 
   // Toggle API Key Visibility
-  safeListen(el.btnToggleKeyVisibility, "click", () => {
+  bindButton(el.btnToggleKeyVisibility, () => {
     if (!el.apiKeyInput) return;
     const isPass = el.apiKeyInput.type === "password";
     el.apiKeyInput.type = isPass ? "text" : "password";
@@ -247,98 +291,108 @@ function attachEventListeners() {
   });
 
   // API Key input
-  safeListen(el.apiKeyInput, "input", (e) => {
-    state.apiKey = e.target.value.trim();
-    safeStorage.setItem("openrouter_api_key", state.apiKey);
-    showSaveIndicator();
-  });
+  if (el.apiKeyInput) {
+    el.apiKeyInput.oninput = (e) => {
+      state.apiKey = e.target.value.trim();
+      safeStorage.setItem("openrouter_api_key", state.apiKey);
+      showSaveIndicator();
+    };
+  }
 
   // Layer separation switch
-  safeListen(el.layerSeparationToggle, "change", (e) => {
-    state.layerSeparation = e.target.checked;
-    safeStorage.setItem("nano_layer_sep", state.layerSeparation ? "1" : "0");
-  });
+  if (el.layerSeparationToggle) {
+    el.layerSeparationToggle.onchange = (e) => {
+      state.layerSeparation = e.target.checked;
+      safeStorage.setItem("nano_layer_sep", state.layerSeparation ? "1" : "0");
+    };
+  }
 
   // Negative prompt
-  safeListen(el.negativePromptInput, "input", (e) => {
-    state.negativePrompt = e.target.value.trim();
-    safeStorage.setItem("nano_neg_prompt", state.negativePrompt);
-  });
+  if (el.negativePromptInput) {
+    el.negativePromptInput.oninput = (e) => {
+      state.negativePrompt = e.target.value.trim();
+      safeStorage.setItem("nano_neg_prompt", state.negativePrompt);
+    };
+  }
 
   // Toggle History Drawer
-  safeListen(el.btnHistoryToggle, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnHistoryToggle, () => {
     closeAllMenus();
-    toggleDrawer(el.historyDrawer);
     if (el.settingsDrawer) {
       el.settingsDrawer.style.display = "none";
       el.settingsDrawer.classList.remove("open");
     }
-    renderHistoryList();
+    toggleDrawer(el.historyDrawer);
+    if (el.historyDrawer && el.historyDrawer.style.display === "block") {
+      renderHistoryList();
+    }
   });
 
   // Clear History
-  safeListen(el.btnClearHistory, "click", () => {
+  bindButton(el.btnClearHistory, () => {
     state.history = [];
     safeStorage.setItem("nano_history", "[]");
     renderHistoryList();
   });
 
   // Image Upload / Add Image
-  safeListen(el.btnAddImage, "click", () => {
+  bindButton(el.btnAddImage, () => {
     if (el.fileInput) el.fileInput.click();
   });
 
-  safeListen(el.fileInput, "change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        setReferenceImage(evt.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
+  if (el.fileInput) {
+    el.fileInput.onchange = (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          setReferenceImage(evt.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+  }
 
   // Remove Thumbnail
-  safeListen(el.btnRemoveThumb, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnRemoveThumb, () => {
     clearReferenceImage();
   });
 
   // Prompt Textarea
-  safeListen(el.promptInput, "input", (e) => {
-    state.prompt = e.target.value;
-  });
+  if (el.promptInput) {
+    el.promptInput.oninput = (e) => {
+      state.prompt = e.target.value;
+    };
+  }
 
   // Style Palette Toggle
-  safeListen(el.btnTogglePalette, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnTogglePalette, () => {
     toggleDrawer(el.stylePaletteDrawer);
   });
 
   // Style Chips
   if (el.styleChips && el.promptInput) {
     el.styleChips.forEach((chip) => {
-      chip.addEventListener("click", () => {
+      chip.onclick = (e) => {
+        if (e) e.stopPropagation();
         const text = chip.dataset.style;
         const cur = el.promptInput.value.trim();
         el.promptInput.value = cur ? `${cur}, ${text}` : text;
         state.prompt = el.promptInput.value;
         el.promptInput.focus();
-      });
+      };
     });
   }
 
   // Model Pill Dropdown
-  safeListen(el.btnModelPill, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnModelPill, () => {
     toggleMenu(el.modelMenu);
   });
 
   if (el.modelMenu) {
     el.modelMenu.querySelectorAll(".menu-item").forEach((item) => {
-      item.addEventListener("click", () => {
+      item.onclick = (e) => {
+        if (e) e.stopPropagation();
         const modelId = item.dataset.model;
         if (modelId === "custom") {
           openCustomModelModal();
@@ -346,177 +400,102 @@ function attachEventListeners() {
           selectModel(modelId, item.textContent.trim());
         }
         closeAllMenus();
-      });
+      };
     });
   }
 
   // Variations Count Pill Dropdown
-  safeListen(el.btnCountPill, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnCountPill, () => {
     toggleMenu(el.countMenu);
   });
 
   if (el.countMenu) {
     el.countMenu.querySelectorAll(".menu-item").forEach((item) => {
-      item.addEventListener("click", () => {
+      item.onclick = (e) => {
+        if (e) e.stopPropagation();
         const countVal = parseInt(item.dataset.count, 10) || 1;
         state.count = countVal;
         if (el.labelCount) el.labelCount.textContent = countVal;
         el.countMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
         item.classList.add("active");
         closeAllMenus();
-      });
+      };
     });
   }
 
   // Resolution Pill Dropdown
-  safeListen(el.btnResPill, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnResPill, () => {
     toggleMenu(el.resMenu);
   });
 
   if (el.resMenu) {
     el.resMenu.querySelectorAll(".menu-item").forEach((item) => {
-      item.addEventListener("click", () => {
+      item.onclick = (e) => {
+        if (e) e.stopPropagation();
         const resVal = item.dataset.res;
         state.resolution = resVal;
         if (el.labelRes) el.labelRes.textContent = resVal.toUpperCase();
         el.resMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
         item.classList.add("active");
         closeAllMenus();
-      });
+      };
     });
   }
 
   // Quality Pill Dropdown
-  safeListen(el.btnQualityPill, "click", (e) => {
-    e.stopPropagation();
+  bindButton(el.btnQualityPill, () => {
     toggleMenu(el.qualityMenu);
   });
 
   if (el.qualityMenu) {
     el.qualityMenu.querySelectorAll(".menu-item").forEach((item) => {
-      item.addEventListener("click", () => {
+      item.onclick = (e) => {
+        if (e) e.stopPropagation();
         const qVal = item.dataset.quality;
         state.quality = qVal;
         if (el.labelQuality) el.labelQuality.textContent = qVal;
         el.qualityMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
         item.classList.add("active");
         closeAllMenus();
-      });
+      };
     });
   }
 
   // Custom Model Modal Buttons
-  safeListen(el.btnCancelCustom, "click", () => {
-    if (el.customModelModal) el.customModelModal.classList.remove("open");
+  bindButton(el.btnCancelCustom, () => {
+    if (el.customModelModal) el.customModelModal.style.display = "none";
   });
 
-  safeListen(el.btnApplyCustom, "click", () => {
+  bindButton(el.btnApplyCustom, () => {
     if (!el.customModelInput) return;
     const slug = el.customModelInput.value.trim();
     if (slug) {
       selectModel(slug, slug.split("/")[1] || slug);
     }
-    if (el.customModelModal) el.customModelModal.classList.remove("open");
+    if (el.customModelModal) el.customModelModal.style.display = "none";
   });
 
   // Main Action: Run Generative Edit (White ↑ ▾ Button)
-  safeListen(el.btnSendAction, "click", (e) => {
-    e.preventDefault();
+  bindButton(el.btnSendAction, () => {
     handleRunGeneration();
   });
 }
 
 /**
- * Universal Click Delegation: Guarantees clicks always work in UXP webview
+ * Universal Click Outside: Closes menus cleanly without DOM crashes
  */
-function attachDelegatedListeners() {
+function attachOutsideClickListener() {
   document.addEventListener("click", (e) => {
-    const target = e.target;
-    if (!target) return;
-
-    // S Avatar Settings button
-    if (target.closest("#btnSettingsToggle")) {
-      e.stopPropagation();
-      closeAllMenus();
-      const drawer = document.getElementById("settingsDrawer");
-      toggleDrawer(drawer);
-      const history = document.getElementById("historyDrawer");
-      if (history) { history.style.display = "none"; history.classList.remove("open"); }
-      return;
+    let curr = e.target;
+    let insideDropdown = false;
+    while (curr && curr !== document && curr !== document.body) {
+      if (curr.classList && (curr.classList.contains("pill-dropdown-wrap") || curr.classList.contains("toolbar-icon-btn"))) {
+        insideDropdown = true;
+        break;
+      }
+      curr = curr.parentElement;
     }
-
-    // History button
-    if (target.closest("#btnHistoryToggle")) {
-      e.stopPropagation();
-      closeAllMenus();
-      const drawer = document.getElementById("historyDrawer");
-      toggleDrawer(drawer);
-      const settings = document.getElementById("settingsDrawer");
-      if (settings) { settings.style.display = "none"; settings.classList.remove("open"); }
-      renderHistoryList();
-      return;
-    }
-
-    // Model Pill
-    if (target.closest("#btnModelPill")) {
-      e.stopPropagation();
-      toggleMenu(document.getElementById("modelMenu"));
-      return;
-    }
-
-    // Variations Count Pill
-    if (target.closest("#btnCountPill")) {
-      e.stopPropagation();
-      toggleMenu(document.getElementById("countMenu"));
-      return;
-    }
-
-    // Resolution Pill
-    if (target.closest("#btnResPill")) {
-      e.stopPropagation();
-      toggleMenu(document.getElementById("resMenu"));
-      return;
-    }
-
-    // Quality Pill
-    if (target.closest("#btnQualityPill")) {
-      e.stopPropagation();
-      toggleMenu(document.getElementById("qualityMenu"));
-      return;
-    }
-
-    // Style Palette Toggle
-    if (target.closest("#btnTogglePalette")) {
-      e.stopPropagation();
-      toggleDrawer(document.getElementById("stylePaletteDrawer"));
-      return;
-    }
-
-    // Add Image card
-    if (target.closest("#btnAddImage")) {
-      const fileInput = document.getElementById("fileInput");
-      if (fileInput) fileInput.click();
-      return;
-    }
-
-    // Remove Thumbnail button
-    if (target.closest("#btnRemoveThumb")) {
-      e.stopPropagation();
-      clearReferenceImage();
-      return;
-    }
-
-    // Send Action Button (White ↑ ▾ button)
-    if (target.closest("#btnSendAction")) {
-      e.preventDefault();
-      handleRunGeneration();
-      return;
-    }
-
-    // Close open menus if clicked outside
-    if (!target.closest(".pill-dropdown-wrap")) {
+    if (!insideDropdown) {
       closeAllMenus();
     }
   });
@@ -528,11 +507,13 @@ function attachDelegatedListeners() {
 }
 
 function openCustomModelModal() {
-  if (el.customModelModal) {
-    el.customModelModal.classList.add("open");
-    if (el.customModelInput) {
-      el.customModelInput.value = state.model.startsWith("custom:") ? state.model.replace("custom:", "") : "";
-      el.customModelInput.focus();
+  const modal = document.getElementById("customModelModal");
+  if (modal) {
+    modal.style.display = "flex";
+    const input = document.getElementById("customModelInput");
+    if (input) {
+      input.value = state.model.startsWith("custom:") ? state.model.replace("custom:", "") : "";
+      input.focus();
     }
   }
 }
@@ -540,14 +521,16 @@ function openCustomModelModal() {
 function selectModel(modelId, displayName) {
   state.model = modelId;
   state.modelDisplayName = displayName;
-  if (el.labelCurrentModel) {
-    el.labelCurrentModel.textContent = displayName;
+  const label = document.getElementById("labelCurrentModel");
+  if (label) {
+    label.textContent = displayName;
   }
   safeStorage.setItem("nano_model", modelId);
   safeStorage.setItem("nano_model_name", displayName);
 
-  if (el.modelMenu) {
-    el.modelMenu.querySelectorAll(".menu-item").forEach((item) => {
+  const menu = document.getElementById("modelMenu");
+  if (menu) {
+    menu.querySelectorAll(".menu-item").forEach((item) => {
       item.classList.toggle("active", item.dataset.model === modelId);
     });
   }
@@ -555,22 +538,28 @@ function selectModel(modelId, displayName) {
 
 function setReferenceImage(dataUrl) {
   state.referenceImageBase64 = dataUrl;
-  if (el.refThumbnailImg) el.refThumbnailImg.src = dataUrl;
-  if (el.refThumbnailCard) el.refThumbnailCard.style.display = "block";
+  const img = document.getElementById("refThumbnailImg");
+  const card = document.getElementById("refThumbnailCard");
+  if (img) img.src = dataUrl;
+  if (card) card.style.display = "block";
 }
 
 function clearReferenceImage() {
   state.referenceImageBase64 = null;
-  if (el.fileInput) el.fileInput.value = "";
-  if (el.refThumbnailImg) el.refThumbnailImg.src = "";
-  if (el.refThumbnailCard) el.refThumbnailCard.style.display = "none";
+  const fileInput = document.getElementById("fileInput");
+  const img = document.getElementById("refThumbnailImg");
+  const card = document.getElementById("refThumbnailCard");
+  if (fileInput) fileInput.value = "";
+  if (img) img.src = "";
+  if (card) card.style.display = "none";
 }
 
 function showSaveIndicator() {
-  if (!el.saveIndicator) return;
-  el.saveIndicator.style.opacity = "1";
+  const badge = document.getElementById("saveIndicator");
+  if (!badge) return;
+  badge.style.opacity = "1";
   setTimeout(() => {
-    if (el.saveIndicator) el.saveIndicator.style.opacity = "0";
+    if (badge) badge.style.opacity = "0";
   }, 1600);
 }
 
@@ -581,10 +570,14 @@ function loadSettings() {
   const savedKey = safeStorage.getItem("openrouter_api_key") || "";
   if (savedKey) {
     state.apiKey = savedKey;
-    if (el.apiKeyInput) el.apiKeyInput.value = savedKey;
-  } else if (el.settingsDrawer) {
-    el.settingsDrawer.style.display = "block";
-    el.settingsDrawer.classList.add("open");
+    const apiKeyInput = document.getElementById("apiKeyInput");
+    if (apiKeyInput) apiKeyInput.value = savedKey;
+  } else {
+    const drawer = document.getElementById("settingsDrawer");
+    if (drawer) {
+      drawer.style.display = "block";
+      drawer.classList.add("open");
+    }
   }
 
   const savedModel = safeStorage.getItem("nano_model");
@@ -594,15 +587,17 @@ function loadSettings() {
   }
 
   const savedSep = safeStorage.getItem("nano_layer_sep");
-  if (savedSep !== null && el.layerSeparationToggle) {
+  if (savedSep !== null) {
     state.layerSeparation = savedSep === "1";
-    el.layerSeparationToggle.checked = state.layerSeparation;
+    const toggle = document.getElementById("layerSeparationToggle");
+    if (toggle) toggle.checked = state.layerSeparation;
   }
 
   const savedNeg = safeStorage.getItem("nano_neg_prompt");
-  if (savedNeg && el.negativePromptInput) {
+  if (savedNeg) {
     state.negativePrompt = savedNeg;
-    el.negativePromptInput.value = savedNeg;
+    const negInput = document.getElementById("negativePromptInput");
+    if (negInput) negInput.value = savedNeg;
   }
 
   try {
@@ -670,8 +665,10 @@ async function refreshPhotoshopContext() {
       try {
         const previewPng = await exportSelectedAreaAsPng(doc, selBounds);
         if (previewPng) {
-          if (el.refThumbnailImg) el.refThumbnailImg.src = `data:image/png;base64,${previewPng}`;
-          if (el.refThumbnailCard) el.refThumbnailCard.style.display = "block";
+          const img = document.getElementById("refThumbnailImg");
+          const card = document.getElementById("refThumbnailCard");
+          if (img) img.src = `data:image/png;base64,${previewPng}`;
+          if (card) card.style.display = "block";
         }
       } catch (e) {}
     }
@@ -680,8 +677,9 @@ async function refreshPhotoshopContext() {
   } else {
     state.isSelectionActive = false;
     state.selectionBounds = { left: 0, top: 0, right: doc.width, bottom: doc.height, width: doc.width, height: doc.height };
-    if (!state.referenceImageBase64 && el.refThumbnailCard) {
-      el.refThumbnailCard.style.display = "none";
+    if (!state.referenceImageBase64) {
+      const card = document.getElementById("refThumbnailCard");
+      if (card) card.style.display = "none";
     }
     setResultBanner("Result added to Photoshop as a masked Smart Object.", "success");
   }
@@ -691,9 +689,11 @@ async function refreshPhotoshopContext() {
  * Set Result / Status banner text and state
  */
 function setResultBanner(text, type = "success") {
-  if (!el.resultBanner || !el.resultText) return;
-  el.resultText.textContent = text;
-  el.resultBanner.className = `result-banner ${type}`;
+  const resultText = document.getElementById("resultText");
+  const resultBanner = document.getElementById("resultBanner");
+  if (!resultBanner || !resultText) return;
+  resultText.textContent = text;
+  resultBanner.className = `result-banner ${type}`;
 }
 
 /**
@@ -801,7 +801,7 @@ function setLoading(loading) {
   const arrow = document.getElementById("sendArrow");
   const caret = document.getElementById("sendCaret");
 
-  if (sendBtn) sendBtn.disabled = loading;
+  if (sendBtn) sendBtn.style.opacity = loading ? "0.6" : "1";
 
   if (loading) {
     if (spinner) spinner.style.display = "inline-block";

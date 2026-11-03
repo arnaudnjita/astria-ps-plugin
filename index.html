@@ -5,6 +5,79 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Nano-Banana</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Direct fallback styling to guarantee instant layout in Photoshop UXP */
+    :root {
+      --bg-app: #181818;
+      --bg-card: #262626;
+      --bg-card-hover: #2d2d2d;
+      --bg-input: #1f1f1f;
+      --bg-pill: #333333;
+      --bg-pill-hover: #3e3e3e;
+      --border-card: #343434;
+      --border-pill: #424242;
+      --border-subtle: #2d2d2d;
+      --text-main: #f4f4f5;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --banana-accent: #f59e0b;
+      --banana-yellow: #fbbf24;
+      --success-bg: #0f291e;
+      --success-border: #14532d;
+      --success-text: #6ee7b7;
+      --success-icon: #34d399;
+      --radius-pill: 20px;
+      --radius-card: 16px;
+      --radius-thumb: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background-color: #181818; color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px; user-select: none; overflow-x: hidden; overflow-y: auto;
+    }
+    [role="button"] { cursor: pointer; user-select: none; }
+    [role="button"] * { pointer-events: none; }
+    .menu-item { pointer-events: auto; }
+    .style-chip { pointer-events: auto; }
+    .settings-drawer input, .settings-drawer a, .settings-drawer label { pointer-events: auto; }
+    .custom-modal-backdrop input, .custom-modal-backdrop [role="button"] { pointer-events: auto; }
+    .nano-app-container { width: 100%; max-width: 500px; margin: 0 auto; padding: 10px 12px 16px 12px; display: flex; flex-direction: column; }
+    .nano-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .header-brand { display: flex; align-items: center; gap: 8px; }
+    .brand-name { font-size: 13px; font-weight: 600; color: #ffffff; }
+    .brand-version { font-size: 10px; color: #6b7280; }
+    .header-controls { display: flex; align-items: center; gap: 6px; }
+    .pill-btn { background-color: #333333; border: 1px solid #424242; color: #f4f4f5; font-size: 11px; font-weight: 500; padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .avatar-pill { background-color: #333333; border: 1px solid #424242; border-radius: 20px; padding: 3px 6px 3px 4px; display: flex; align-items: center; gap: 3px; cursor: pointer; }
+    .avatar-circle { width: 19px; height: 19px; border-radius: 50%; background-color: #dc2626; color: #ffffff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+    .settings-drawer, .history-drawer { display: none; background-color: #262626; border: 1px solid #343434; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+    .drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .drawer-title { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #9ca3af; }
+    .link-get-key { color: #fbbf24; text-decoration: none; font-size: 10px; font-weight: 600; }
+    .clean-input { width: 100%; background-color: #1f1f1f; border: 1px solid #2d2d2d; border-radius: 8px; padding: 7px 9px; color: #ffffff; font-size: 11.5px; outline: none; }
+    .nano-main-card { background-color: #262626; border: 1px solid #343434; border-radius: 16px; padding: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
+    .image-tray { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .thumbnail-card { width: 64px; height: 64px; border-radius: 12px; position: relative; background-color: #181818; border: 1px solid #3d3d3d; display: none; }
+    .thumbnail-card img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; display: block; }
+    .btn-remove-thumb { position: absolute; top: -5px; left: -5px; width: 18px; height: 18px; border-radius: 50%; background-color: #3f3f46; border: 1px solid #52525b; color: #fff; font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .add-image-card { width: 64px; height: 64px; border-radius: 12px; border: 1px dashed #4b4b4b; background-color: rgba(255,255,255,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #9ca3af; cursor: pointer; }
+    .prompt-textarea { width: 100%; background: transparent; border: none; outline: none; color: #ffffff; font-size: 14.5px; font-weight: 500; min-height: 48px; resize: vertical; }
+    .result-banner { background-color: #0f291e; border: 1px solid #14532d; border-radius: 10px; padding: 7px 10px; display: flex; align-items: center; gap: 7px; margin-bottom: 12px; }
+    .result-text { font-size: 11px; font-weight: 500; color: #6ee7b7; }
+    .toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+    .toolbar-left-pills { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; flex: 1; }
+    .toolbar-pill { background-color: #333333; border: 1px solid #424242; color: #e4e4e7; font-size: 11px; font-weight: 500; padding: 5px 8px; border-radius: 20px; display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
+    .toolbar-icon-btn { background-color: #333333; border: 1px solid #424242; color: #e4e4e7; width: 27px; height: 27px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .btn-send-pill { background-color: #ffffff !important; color: #000000 !important; border: none; border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; justify-content: center; gap: 3px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+    .arrow-icon { font-size: 15px; font-weight: 800; color: #000000; }
+    .pill-menu { position: absolute; bottom: calc(100% + 6px); left: 0; background-color: #242424; border: 1px solid #3d3d3d; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.7); padding: 4px; min-width: 175px; z-index: 9999; display: none; }
+    .menu-item { padding: 6px 10px; font-size: 11px; color: #d4d4d8; border-radius: 6px; cursor: pointer; }
+    .menu-item:hover { background-color: #333333; color: #fff; }
+    .menu-item.active { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; font-weight: 600; }
+  </style>
 </head>
 <body>
   <div class="nano-app-container">
@@ -40,20 +113,20 @@
 
       <div class="header-controls">
         <!-- History Dropdown Pill -->
-        <button type="button" class="pill-btn history-pill" id="btnHistoryToggle" title="Session Generation History">
+        <div role="button" tabindex="0" class="pill-btn history-pill" id="btnHistoryToggle" title="Session Generation History">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
           <span>History</span>
           <span class="dropdown-caret">▾</span>
-        </button>
+        </div>
 
         <!-- User Profile / Settings Avatar Pill -->
-        <button type="button" class="avatar-pill" id="btnSettingsToggle" title="OpenRouter API Key & Settings">
+        <div role="button" tabindex="0" class="avatar-pill" id="btnSettingsToggle" title="OpenRouter API Key & Settings">
           <span class="avatar-circle">S</span>
           <span class="dropdown-caret">▾</span>
-        </button>
+        </div>
       </div>
     </header>
 
@@ -73,7 +146,7 @@
             autocomplete="off"
             spellcheck="false"
           />
-          <button type="button" class="btn-icon-inside" id="btnToggleKeyVisibility" title="Show / Hide Key">👁</button>
+          <div role="button" tabindex="0" class="btn-icon-inside" id="btnToggleKeyVisibility" title="Show / Hide Key">👁</div>
         </div>
 
         <div class="setting-row">
@@ -105,7 +178,7 @@
     <div class="history-drawer" id="historyDrawer">
       <div class="drawer-header">
         <span class="drawer-title">Recent Edits (Session)</span>
-        <button type="button" class="btn-clear-history" id="btnClearHistory">Clear</button>
+        <div role="button" tabindex="0" class="btn-clear-history" id="btnClearHistory">Clear</div>
       </div>
       <div class="history-list" id="historyList">
         <div class="empty-history">No generations yet in this session.</div>
@@ -120,11 +193,11 @@
         <!-- Active Selection / Reference Thumbnail -->
         <div class="thumbnail-card" id="refThumbnailCard">
           <img id="refThumbnailImg" src="" alt="Context" />
-          <button type="button" class="btn-remove-thumb" id="btnRemoveThumb" title="Remove reference">✕</button>
+          <div role="button" tabindex="0" class="btn-remove-thumb" id="btnRemoveThumb" title="Remove reference">✕</div>
         </div>
 
         <!-- Add image button -->
-        <button type="button" class="add-image-card" id="btnAddImage" title="Add reference image or sync selection" style="border: 1px dashed #4b4b4b !important; background: rgba(255, 255, 255, 0.02) !important;">
+        <div role="button" tabindex="0" class="add-image-card" id="btnAddImage" title="Add reference image or sync selection">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <rect x="3" y="3" width="18" height="18" rx="3"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -133,7 +206,7 @@
             <line x1="9" y1="11" x2="15" y2="11"/>
           </svg>
           <span class="add-image-label">Add image</span>
-        </button>
+        </div>
         <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp" style="display: none;" />
       </div>
 
@@ -145,7 +218,6 @@
           rows="2"
           placeholder="Replace the earring"
           spellcheck="false"
-          style="background: transparent !important; border: none !important; color: #ffffff !important;"
         >Replace the earring</textarea>
       </div>
 
@@ -174,7 +246,7 @@
           
           <!-- Model Selector Pill -->
           <div class="pill-dropdown-wrap">
-            <button type="button" class="toolbar-pill model-pill" id="btnModelPill">
+            <div role="button" tabindex="0" class="toolbar-pill model-pill" id="btnModelPill">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
@@ -182,7 +254,7 @@
               </svg>
               <span id="labelCurrentModel">GPT Image 2.5 Sunburst</span>
               <span class="dropdown-caret">▾</span>
-            </button>
+            </div>
             <div class="pill-menu" id="modelMenu">
               <div class="menu-item active" data-model="openai/gpt-image-2.5-sunburst">GPT Image 2.5 Sunburst</div>
               <div class="menu-item" data-model="google/gemini-nano-banana-2.1">Nano Banana 2.1</div>
@@ -197,7 +269,7 @@
 
           <!-- Variations / Quantity Pill -->
           <div class="pill-dropdown-wrap">
-            <button type="button" class="toolbar-pill count-pill" id="btnCountPill">
+            <div role="button" tabindex="0" class="toolbar-pill count-pill" id="btnCountPill">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polygon points="12 2 2 7 12 12 22 7 12 2"/>
                 <polyline points="2 17 12 22 22 17"/>
@@ -205,7 +277,7 @@
               </svg>
               <span id="labelCount">1</span>
               <span class="dropdown-caret">▾</span>
-            </button>
+            </div>
             <div class="pill-menu compact" id="countMenu">
               <div class="menu-item active" data-count="1">1 variation</div>
               <div class="menu-item" data-count="2">2 variations</div>
@@ -215,7 +287,7 @@
 
           <!-- Resolution Pill -->
           <div class="pill-dropdown-wrap">
-            <button type="button" class="toolbar-pill res-pill" id="btnResPill">
+            <div role="button" tabindex="0" class="toolbar-pill res-pill" id="btnResPill">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="18" height="18" rx="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -223,7 +295,7 @@
               </svg>
               <span id="labelRes">2K</span>
               <span class="dropdown-caret">▾</span>
-            </button>
+            </div>
             <div class="pill-menu compact" id="resMenu">
               <div class="menu-item" data-res="auto">Auto (Selection)</div>
               <div class="menu-item" data-res="1K">1K (Standard)</div>
@@ -234,10 +306,10 @@
 
           <!-- Quality / Creativity Pill -->
           <div class="pill-dropdown-wrap">
-            <button type="button" class="toolbar-pill quality-pill" id="btnQualityPill">
+            <div role="button" tabindex="0" class="toolbar-pill quality-pill" id="btnQualityPill">
               <span id="labelQuality">Medium</span>
               <span class="dropdown-caret">▾</span>
-            </button>
+            </div>
             <div class="pill-menu compact" id="qualityMenu">
               <div class="menu-item" data-quality="Fast">Fast</div>
               <div class="menu-item active" data-quality="Medium">Medium</div>
@@ -246,7 +318,7 @@
           </div>
 
           <!-- Style Palette Toggle Button -->
-          <button type="button" class="toolbar-icon-btn" id="btnTogglePalette" title="Quick Style Modifiers">
+          <div role="button" tabindex="0" class="toolbar-icon-btn" id="btnTogglePalette" title="Quick Style Modifiers">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
               <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
@@ -254,20 +326,20 @@
               <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
               <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
             </svg>
-          </button>
+          </div>
         </div>
 
         <!-- Distinctive White Send Button Pill (↑ ▾) -->
-        <button type="button" class="btn-send-pill" id="btnSendAction" title="Run Generative Edit" style="background: #ffffff !important; color: #000000 !important;">
+        <div role="button" tabindex="0" class="btn-send-pill" id="btnSendAction" title="Run Generative Edit">
           <span class="spinner" id="sendSpinner"></span>
-          <span class="arrow-icon" id="sendArrow" style="color: #000000 !important;">↑</span>
-          <span class="arrow-caret" id="sendCaret" style="color: #52525b !important;">▾</span>
-        </button>
+          <span class="arrow-icon" id="sendArrow">↑</span>
+          <span class="arrow-caret" id="sendCaret">▾</span>
+        </div>
       </footer>
     </main>
 
     <!-- Custom Model Modal Dialog -->
-    <div class="custom-modal-backdrop" id="customModelModal">
+    <div class="custom-modal-backdrop" id="customModelModal" style="display: none;">
       <div class="custom-modal-box">
         <div class="custom-modal-title">Enter Custom OpenRouter Model</div>
         <input
@@ -277,8 +349,8 @@
           placeholder="e.g. black-forest-labs/flux-1-schnell"
         />
         <div class="custom-modal-actions">
-          <button type="button" class="btn-secondary" id="btnCancelCustom">Cancel</button>
-          <button type="button" class="btn-primary" id="btnApplyCustom">Apply</button>
+          <div role="button" tabindex="0" class="btn-secondary" id="btnCancelCustom">Cancel</div>
+          <div role="button" tabindex="0" class="btn-primary" id="btnApplyCustom">Apply</div>
         </div>
       </div>
     </div>
