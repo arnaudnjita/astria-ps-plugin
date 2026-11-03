@@ -51,7 +51,7 @@
 
         <!-- User Profile / Settings Avatar Pill -->
         <button type="button" class="avatar-pill" id="btnSettingsToggle" title="OpenRouter API Key & Settings">
-          <div class="avatar-circle">S</div>
+          <span class="avatar-circle">S</span>
           <span class="dropdown-caret">▾</span>
         </button>
       </div>
@@ -124,7 +124,7 @@
         </div>
 
         <!-- Add image button -->
-        <button type="button" class="add-image-card" id="btnAddImage" title="Add reference image or sync selection">
+        <button type="button" class="add-image-card" id="btnAddImage" title="Add reference image or sync selection" style="border: 1px dashed #4b4b4b !important; background: rgba(255, 255, 255, 0.02) !important;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <rect x="3" y="3" width="18" height="18" rx="3"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
@@ -145,6 +145,7 @@
           rows="2"
           placeholder="Replace the earring"
           spellcheck="false"
+          style="background: transparent !important; border: none !important; color: #ffffff !important;"
         >Replace the earring</textarea>
       </div>
 
@@ -257,10 +258,10 @@
         </div>
 
         <!-- Distinctive White Send Button Pill (↑ ▾) -->
-        <button type="button" class="btn-send-pill" id="btnSendAction" title="Run Generative Edit">
+        <button type="button" class="btn-send-pill" id="btnSendAction" title="Run Generative Edit" style="background: #ffffff !important; color: #000000 !important;">
           <span class="spinner" id="sendSpinner"></span>
-          <span class="arrow-icon" id="sendArrow">↑</span>
-          <span class="arrow-caret" id="sendCaret">▾</span>
+          <span class="arrow-icon" id="sendArrow" style="color: #000000 !important;">↑</span>
+          <span class="arrow-caret" id="sendCaret" style="color: #52525b !important;">▾</span>
         </button>
       </footer>
     </main>

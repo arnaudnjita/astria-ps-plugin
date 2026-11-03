@@ -1,6 +1,6 @@
 {
   "manifestVersion": 5,
-  "id": "com.astria.nanobanana",
+  "id": "com.astria.generativefill",
   "name": "Nano-Banana",
   "version": "2.0.21",
   "main": "index.html",
@@ -13,7 +13,7 @@
   "entrypoints": [
     {
       "type": "panel",
-      "id": "nanobananaPanel",
+      "id": "generativeFillPanel",
       "name": "Nano-Banana",
       "minimumSize": {
         "width": 260,

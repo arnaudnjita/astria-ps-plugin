@@ -18,10 +18,10 @@ try {
   console.warn("Photoshop environment not detected; running in mock/preview mode.", e);
 }
 
-const app = photoshop.app || (photoshop.app = {});
-const core = photoshop.core || (photoshop.core = {});
-const action = photoshop.action || (photoshop.action = {});
-const imaging = photoshop.imaging || (photoshop.imaging = {});
+const app = photoshop.app || {};
+const core = photoshop.core || {};
+const action = photoshop.action || {};
+const imaging = photoshop.imaging || {};
 const storage = uxp.storage || {};
 
 // Import API module
@@ -38,7 +38,11 @@ if (!apiModule || !apiModule.TOP_6_IMAGE_MODELS) {
 }
 
 const {
-  TOP_6_IMAGE_MODELS = [],
+  TOP_6_IMAGE_MODELS = [
+    { id: "openai/gpt-image-2.5-sunburst", name: "GPT Image 2.5 Sunburst" },
+    { id: "google/gemini-nano-banana-2.1", name: "Nano Banana 2.1" },
+    { id: "black-forest-labs/flux-3-image", name: "FLUX 3 Image" }
+  ],
   generateImage,
   calculateClosestAspectRatio,
   fetchAllImageModels,
@@ -86,11 +90,13 @@ let el = {};
  */
 function boot() {
   try {
+    console.log("Nano-Banana: Initializing UI...");
     initUI();
     attachEventListeners();
+    attachDelegatedListeners();
     loadSettings();
     refreshPhotoshopContext();
-    console.log("Astria Nano-Banana V2: Ready & Responsive");
+    console.log("Nano-Banana: Ready & Fully Responsive!");
   } catch (err) {
     console.error("Nano-Banana boot error:", err);
   }
@@ -166,116 +172,150 @@ function initUI() {
 }
 
 /**
- * Attach UI event handlers
+ * Safe helper to attach event listener
+ */
+function safeListen(element, event, handler) {
+  if (element && typeof element.addEventListener === "function") {
+    try {
+      element.addEventListener(event, handler);
+      return true;
+    } catch (e) {
+      console.warn("safeListen error:", e);
+    }
+  }
+  return false;
+}
+
+/**
+ * Toggles a drawer element open/close with direct style & class manipulation
+ */
+function toggleDrawer(drawerEl) {
+  if (!drawerEl) return;
+  const isVisible = drawerEl.style.display === "block" || drawerEl.classList.contains("open");
+  drawerEl.style.display = isVisible ? "none" : "block";
+  if (isVisible) {
+    drawerEl.classList.remove("open");
+  } else {
+    drawerEl.classList.add("open");
+  }
+}
+
+/**
+ * Toggles a dropdown menu open/close
+ */
+function toggleMenu(menuEl) {
+  if (!menuEl) return;
+  const isVisible = menuEl.style.display === "block" || menuEl.classList.contains("open");
+  closeAllMenus();
+  if (!isVisible) {
+    menuEl.style.display = "block";
+    menuEl.classList.add("open");
+  }
+}
+
+function closeAllMenus() {
+  document.querySelectorAll(".pill-menu").forEach((m) => {
+    m.style.display = "none";
+    m.classList.remove("open");
+  });
+}
+
+/**
+ * Attach UI direct event handlers
  */
 function attachEventListeners() {
   // Toggle Settings Drawer (Avatar S)
-  if (el.btnSettingsToggle && el.settingsDrawer) {
-    el.btnSettingsToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      closeAllMenus();
-      el.settingsDrawer.classList.toggle("open");
-      if (el.historyDrawer) el.historyDrawer.classList.remove("open");
-      if (el.settingsDrawer.classList.contains("open") && el.apiKeyInput) {
-        el.apiKeyInput.focus();
-      }
-    });
-  }
+  safeListen(el.btnSettingsToggle, "click", (e) => {
+    e.stopPropagation();
+    closeAllMenus();
+    toggleDrawer(el.settingsDrawer);
+    if (el.historyDrawer) {
+      el.historyDrawer.style.display = "none";
+      el.historyDrawer.classList.remove("open");
+    }
+    if (el.settingsDrawer && el.settingsDrawer.style.display === "block" && el.apiKeyInput) {
+      el.apiKeyInput.focus();
+    }
+  });
 
   // Toggle API Key Visibility
-  if (el.btnToggleKeyVisibility && el.apiKeyInput) {
-    el.btnToggleKeyVisibility.addEventListener("click", () => {
-      const isPass = el.apiKeyInput.type === "password";
-      el.apiKeyInput.type = isPass ? "text" : "password";
-      el.btnToggleKeyVisibility.textContent = isPass ? "🔒" : "👁";
-    });
-  }
+  safeListen(el.btnToggleKeyVisibility, "click", () => {
+    if (!el.apiKeyInput) return;
+    const isPass = el.apiKeyInput.type === "password";
+    el.apiKeyInput.type = isPass ? "text" : "password";
+    el.btnToggleKeyVisibility.textContent = isPass ? "🔒" : "👁";
+  });
 
   // API Key input
-  if (el.apiKeyInput) {
-    el.apiKeyInput.addEventListener("input", (e) => {
-      state.apiKey = e.target.value.trim();
-      safeStorage.setItem("openrouter_api_key", state.apiKey);
-      showSaveIndicator();
-    });
-  }
+  safeListen(el.apiKeyInput, "input", (e) => {
+    state.apiKey = e.target.value.trim();
+    safeStorage.setItem("openrouter_api_key", state.apiKey);
+    showSaveIndicator();
+  });
 
   // Layer separation switch
-  if (el.layerSeparationToggle) {
-    el.layerSeparationToggle.addEventListener("change", (e) => {
-      state.layerSeparation = e.target.checked;
-      safeStorage.setItem("nano_layer_sep", state.layerSeparation ? "1" : "0");
-    });
-  }
+  safeListen(el.layerSeparationToggle, "change", (e) => {
+    state.layerSeparation = e.target.checked;
+    safeStorage.setItem("nano_layer_sep", state.layerSeparation ? "1" : "0");
+  });
 
   // Negative prompt
-  if (el.negativePromptInput) {
-    el.negativePromptInput.addEventListener("input", (e) => {
-      state.negativePrompt = e.target.value.trim();
-      safeStorage.setItem("nano_neg_prompt", state.negativePrompt);
-    });
-  }
+  safeListen(el.negativePromptInput, "input", (e) => {
+    state.negativePrompt = e.target.value.trim();
+    safeStorage.setItem("nano_neg_prompt", state.negativePrompt);
+  });
 
   // Toggle History Drawer
-  if (el.btnHistoryToggle && el.historyDrawer) {
-    el.btnHistoryToggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      closeAllMenus();
-      el.historyDrawer.classList.toggle("open");
-      if (el.settingsDrawer) el.settingsDrawer.classList.remove("open");
-      renderHistoryList();
-    });
-  }
+  safeListen(el.btnHistoryToggle, "click", (e) => {
+    e.stopPropagation();
+    closeAllMenus();
+    toggleDrawer(el.historyDrawer);
+    if (el.settingsDrawer) {
+      el.settingsDrawer.style.display = "none";
+      el.settingsDrawer.classList.remove("open");
+    }
+    renderHistoryList();
+  });
 
   // Clear History
-  if (el.btnClearHistory) {
-    el.btnClearHistory.addEventListener("click", () => {
-      state.history = [];
-      safeStorage.setItem("nano_history", "[]");
-      renderHistoryList();
-    });
-  }
+  safeListen(el.btnClearHistory, "click", () => {
+    state.history = [];
+    safeStorage.setItem("nano_history", "[]");
+    renderHistoryList();
+  });
 
   // Image Upload / Add Image
-  if (el.btnAddImage && el.fileInput) {
-    el.btnAddImage.addEventListener("click", () => {
-      el.fileInput.click();
-    });
+  safeListen(el.btnAddImage, "click", () => {
+    if (el.fileInput) el.fileInput.click();
+  });
 
-    el.fileInput.addEventListener("change", (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          setReferenceImage(evt.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-  }
+  safeListen(el.fileInput, "change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        setReferenceImage(evt.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
   // Remove Thumbnail
-  if (el.btnRemoveThumb) {
-    el.btnRemoveThumb.addEventListener("click", (e) => {
-      e.stopPropagation();
-      clearReferenceImage();
-    });
-  }
+  safeListen(el.btnRemoveThumb, "click", (e) => {
+    e.stopPropagation();
+    clearReferenceImage();
+  });
 
   // Prompt Textarea
-  if (el.promptInput) {
-    el.promptInput.addEventListener("input", (e) => {
-      state.prompt = e.target.value;
-    });
-  }
+  safeListen(el.promptInput, "input", (e) => {
+    state.prompt = e.target.value;
+  });
 
   // Style Palette Toggle
-  if (el.btnTogglePalette && el.stylePaletteDrawer) {
-    el.btnTogglePalette.addEventListener("click", (e) => {
-      e.stopPropagation();
-      el.stylePaletteDrawer.classList.toggle("open");
-    });
-  }
+  safeListen(el.btnTogglePalette, "click", (e) => {
+    e.stopPropagation();
+    toggleDrawer(el.stylePaletteDrawer);
+  });
 
   // Style Chips
   if (el.styleChips && el.promptInput) {
@@ -291,14 +331,12 @@ function attachEventListeners() {
   }
 
   // Model Pill Dropdown
-  if (el.btnModelPill && el.modelMenu) {
-    el.btnModelPill.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = el.modelMenu.classList.contains("open");
-      closeAllMenus();
-      if (!isOpen) el.modelMenu.classList.add("open");
-    });
+  safeListen(el.btnModelPill, "click", (e) => {
+    e.stopPropagation();
+    toggleMenu(el.modelMenu);
+  });
 
+  if (el.modelMenu) {
     el.modelMenu.querySelectorAll(".menu-item").forEach((item) => {
       item.addEventListener("click", () => {
         const modelId = item.dataset.model;
@@ -307,20 +345,18 @@ function attachEventListeners() {
         } else {
           selectModel(modelId, item.textContent.trim());
         }
-        el.modelMenu.classList.remove("open");
+        closeAllMenus();
       });
     });
   }
 
   // Variations Count Pill Dropdown
-  if (el.btnCountPill && el.countMenu) {
-    el.btnCountPill.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = el.countMenu.classList.contains("open");
-      closeAllMenus();
-      if (!isOpen) el.countMenu.classList.add("open");
-    });
+  safeListen(el.btnCountPill, "click", (e) => {
+    e.stopPropagation();
+    toggleMenu(el.countMenu);
+  });
 
+  if (el.countMenu) {
     el.countMenu.querySelectorAll(".menu-item").forEach((item) => {
       item.addEventListener("click", () => {
         const countVal = parseInt(item.dataset.count, 10) || 1;
@@ -328,20 +364,18 @@ function attachEventListeners() {
         if (el.labelCount) el.labelCount.textContent = countVal;
         el.countMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
         item.classList.add("active");
-        el.countMenu.classList.remove("open");
+        closeAllMenus();
       });
     });
   }
 
   // Resolution Pill Dropdown
-  if (el.btnResPill && el.resMenu) {
-    el.btnResPill.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = el.resMenu.classList.contains("open");
-      closeAllMenus();
-      if (!isOpen) el.resMenu.classList.add("open");
-    });
+  safeListen(el.btnResPill, "click", (e) => {
+    e.stopPropagation();
+    toggleMenu(el.resMenu);
+  });
 
+  if (el.resMenu) {
     el.resMenu.querySelectorAll(".menu-item").forEach((item) => {
       item.addEventListener("click", () => {
         const resVal = item.dataset.res;
@@ -349,20 +383,18 @@ function attachEventListeners() {
         if (el.labelRes) el.labelRes.textContent = resVal.toUpperCase();
         el.resMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
         item.classList.add("active");
-        el.resMenu.classList.remove("open");
+        closeAllMenus();
       });
     });
   }
 
   // Quality Pill Dropdown
-  if (el.btnQualityPill && el.qualityMenu) {
-    el.btnQualityPill.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isOpen = el.qualityMenu.classList.contains("open");
-      closeAllMenus();
-      if (!isOpen) el.qualityMenu.classList.add("open");
-    });
+  safeListen(el.btnQualityPill, "click", (e) => {
+    e.stopPropagation();
+    toggleMenu(el.qualityMenu);
+  });
 
+  if (el.qualityMenu) {
     el.qualityMenu.querySelectorAll(".menu-item").forEach((item) => {
       item.addEventListener("click", () => {
         const qVal = item.dataset.quality;
@@ -370,51 +402,129 @@ function attachEventListeners() {
         if (el.labelQuality) el.labelQuality.textContent = qVal;
         el.qualityMenu.querySelectorAll(".menu-item").forEach((m) => m.classList.remove("active"));
         item.classList.add("active");
-        el.qualityMenu.classList.remove("open");
+        closeAllMenus();
       });
     });
   }
 
-  // Close menus on outside click
+  // Custom Model Modal Buttons
+  safeListen(el.btnCancelCustom, "click", () => {
+    if (el.customModelModal) el.customModelModal.classList.remove("open");
+  });
+
+  safeListen(el.btnApplyCustom, "click", () => {
+    if (!el.customModelInput) return;
+    const slug = el.customModelInput.value.trim();
+    if (slug) {
+      selectModel(slug, slug.split("/")[1] || slug);
+    }
+    if (el.customModelModal) el.customModelModal.classList.remove("open");
+  });
+
+  // Main Action: Run Generative Edit (White ↑ ▾ Button)
+  safeListen(el.btnSendAction, "click", (e) => {
+    e.preventDefault();
+    handleRunGeneration();
+  });
+}
+
+/**
+ * Universal Click Delegation: Guarantees clicks always work in UXP webview
+ */
+function attachDelegatedListeners() {
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".pill-dropdown-wrap")) {
+    const target = e.target;
+    if (!target) return;
+
+    // S Avatar Settings button
+    if (target.closest("#btnSettingsToggle")) {
+      e.stopPropagation();
+      closeAllMenus();
+      const drawer = document.getElementById("settingsDrawer");
+      toggleDrawer(drawer);
+      const history = document.getElementById("historyDrawer");
+      if (history) { history.style.display = "none"; history.classList.remove("open"); }
+      return;
+    }
+
+    // History button
+    if (target.closest("#btnHistoryToggle")) {
+      e.stopPropagation();
+      closeAllMenus();
+      const drawer = document.getElementById("historyDrawer");
+      toggleDrawer(drawer);
+      const settings = document.getElementById("settingsDrawer");
+      if (settings) { settings.style.display = "none"; settings.classList.remove("open"); }
+      renderHistoryList();
+      return;
+    }
+
+    // Model Pill
+    if (target.closest("#btnModelPill")) {
+      e.stopPropagation();
+      toggleMenu(document.getElementById("modelMenu"));
+      return;
+    }
+
+    // Variations Count Pill
+    if (target.closest("#btnCountPill")) {
+      e.stopPropagation();
+      toggleMenu(document.getElementById("countMenu"));
+      return;
+    }
+
+    // Resolution Pill
+    if (target.closest("#btnResPill")) {
+      e.stopPropagation();
+      toggleMenu(document.getElementById("resMenu"));
+      return;
+    }
+
+    // Quality Pill
+    if (target.closest("#btnQualityPill")) {
+      e.stopPropagation();
+      toggleMenu(document.getElementById("qualityMenu"));
+      return;
+    }
+
+    // Style Palette Toggle
+    if (target.closest("#btnTogglePalette")) {
+      e.stopPropagation();
+      toggleDrawer(document.getElementById("stylePaletteDrawer"));
+      return;
+    }
+
+    // Add Image card
+    if (target.closest("#btnAddImage")) {
+      const fileInput = document.getElementById("fileInput");
+      if (fileInput) fileInput.click();
+      return;
+    }
+
+    // Remove Thumbnail button
+    if (target.closest("#btnRemoveThumb")) {
+      e.stopPropagation();
+      clearReferenceImage();
+      return;
+    }
+
+    // Send Action Button (White ↑ ▾ button)
+    if (target.closest("#btnSendAction")) {
+      e.preventDefault();
+      handleRunGeneration();
+      return;
+    }
+
+    // Close open menus if clicked outside
+    if (!target.closest(".pill-dropdown-wrap")) {
       closeAllMenus();
     }
   });
 
-  // Custom Model Modal
-  if (el.btnCancelCustom && el.customModelModal) {
-    el.btnCancelCustom.addEventListener("click", () => {
-      el.customModelModal.classList.remove("open");
-    });
-  }
-
-  if (el.btnApplyCustom && el.customModelInput) {
-    el.btnApplyCustom.addEventListener("click", () => {
-      const slug = el.customModelInput.value.trim();
-      if (slug) {
-        selectModel(slug, slug.split("/")[1] || slug);
-      }
-      el.customModelModal.classList.remove("open");
-    });
-  }
-
-  // Window focus refreshes Photoshop context
+  // Window focus auto-refreshes Photoshop context
   window.addEventListener("focus", () => {
     refreshPhotoshopContext();
   });
-
-  // Main Action: Run Generative Edit (White ↑ ▾ Button)
-  if (el.btnSendAction) {
-    el.btnSendAction.addEventListener("click", (e) => {
-      e.preventDefault();
-      handleRunGeneration();
-    });
-  }
-}
-
-function closeAllMenus() {
-  document.querySelectorAll(".pill-menu").forEach((m) => m.classList.remove("open"));
 }
 
 function openCustomModelModal() {
@@ -473,6 +583,7 @@ function loadSettings() {
     state.apiKey = savedKey;
     if (el.apiKeyInput) el.apiKeyInput.value = savedKey;
   } else if (el.settingsDrawer) {
+    el.settingsDrawer.style.display = "block";
     el.settingsDrawer.classList.add("open");
   }
 
@@ -518,7 +629,7 @@ async function refreshPhotoshopContext() {
     return;
   }
 
-  // Check selection
+  // Check selection via batchPlay
   let selBounds = null;
   try {
     if (action && typeof action.batchPlay === "function") {
@@ -554,7 +665,7 @@ async function refreshPhotoshopContext() {
     state.isSelectionActive = true;
     state.selectionBounds = selBounds;
 
-    // Auto-preview cropped selection thumbnail in the tray if no manual reference image was loaded
+    // Auto-preview cropped selection thumbnail in tray if no manual reference image
     if (!state.referenceImageBase64) {
       try {
         const previewPng = await exportSelectedAreaAsPng(doc, selBounds);
@@ -577,7 +688,7 @@ async function refreshPhotoshopContext() {
 }
 
 /**
- * Set the Result / Status notification banner text and state
+ * Set Result / Status banner text and state
  */
 function setResultBanner(text, type = "success") {
   if (!el.resultBanner || !el.resultText) return;
@@ -591,21 +702,28 @@ function setResultBanner(text, type = "success") {
 async function handleRunGeneration() {
   if (state.isGenerating) return;
 
-  const apiKey = (el.apiKeyInput ? el.apiKeyInput.value : state.apiKey).trim();
-  const prompt = (el.promptInput ? el.promptInput.value : state.prompt).trim();
+  const apiKeyInput = document.getElementById("apiKeyInput");
+  const promptInput = document.getElementById("promptInput");
+
+  const apiKey = (apiKeyInput ? apiKeyInput.value : state.apiKey).trim();
+  const prompt = (promptInput ? promptInput.value : state.prompt).trim();
 
   // Validate API Key
   if (!apiKey) {
     setResultBanner("Please provide your OpenRouter API key (click 'S' avatar at top-right).", "error");
-    if (el.settingsDrawer) el.settingsDrawer.classList.add("open");
-    if (el.apiKeyInput) el.apiKeyInput.focus();
+    const drawer = document.getElementById("settingsDrawer");
+    if (drawer) {
+      drawer.style.display = "block";
+      drawer.classList.add("open");
+    }
+    if (apiKeyInput) apiKeyInput.focus();
     return;
   }
 
   // Validate Prompt
   if (!prompt) {
     setResultBanner("Please enter an edit prompt (e.g. 'Replace the earring').", "error");
-    if (el.promptInput) el.promptInput.focus();
+    if (promptInput) promptInput.focus();
     return;
   }
 
@@ -660,7 +778,7 @@ async function handleRunGeneration() {
     setResultBanner("Placing Smart Object and creating Layer Mask...", "info");
     await insertAndAlignGeneratedImage(apiResult.bytes, bounds, state.isSelectionActive, prompt, state.layerSeparation);
 
-    // 6. Update Success Banner (Matches exact screenshot text!)
+    // 6. Update Success Banner
     setResultBanner("Result added to Photoshop as a masked Smart Object.", "success");
 
     // 7. Add to History
@@ -678,16 +796,21 @@ async function handleRunGeneration() {
  */
 function setLoading(loading) {
   state.isGenerating = loading;
-  if (el.btnSendAction) el.btnSendAction.disabled = loading;
+  const sendBtn = document.getElementById("btnSendAction");
+  const spinner = document.getElementById("sendSpinner");
+  const arrow = document.getElementById("sendArrow");
+  const caret = document.getElementById("sendCaret");
+
+  if (sendBtn) sendBtn.disabled = loading;
 
   if (loading) {
-    if (el.sendSpinner) el.sendSpinner.style.display = "inline-block";
-    if (el.sendArrow) el.sendArrow.style.display = "none";
-    if (el.sendCaret) el.sendCaret.style.display = "none";
+    if (spinner) spinner.style.display = "inline-block";
+    if (arrow) arrow.style.display = "none";
+    if (caret) caret.style.display = "none";
   } else {
-    if (el.sendSpinner) el.sendSpinner.style.display = "none";
-    if (el.sendArrow) el.sendArrow.style.display = "inline";
-    if (el.sendCaret) el.sendCaret.style.display = "inline";
+    if (spinner) spinner.style.display = "none";
+    if (arrow) arrow.style.display = "inline";
+    if (caret) caret.style.display = "inline";
   }
 }
 
@@ -911,13 +1034,14 @@ function addHistoryItem(prompt, modelName, thumbB64) {
 }
 
 function renderHistoryList() {
-  if (!el.historyList) return;
+  const historyList = document.getElementById("historyList");
+  if (!historyList) return;
   if (!state.history || state.history.length === 0) {
-    el.historyList.innerHTML = '<div class="empty-history">No generations yet in this session.</div>';
+    historyList.innerHTML = '<div class="empty-history">No generations yet in this session.</div>';
     return;
   }
 
-  el.historyList.innerHTML = "";
+  historyList.innerHTML = "";
   state.history.forEach((h) => {
     const div = document.createElement("div");
     div.className = "history-item";
@@ -929,13 +1053,18 @@ function renderHistoryList() {
       </div>
     `;
     div.addEventListener("click", () => {
-      if (el.promptInput) {
-        el.promptInput.value = h.prompt;
+      const promptInput = document.getElementById("promptInput");
+      if (promptInput) {
+        promptInput.value = h.prompt;
         state.prompt = h.prompt;
       }
-      if (el.historyDrawer) el.historyDrawer.classList.remove("open");
+      const historyDrawer = document.getElementById("historyDrawer");
+      if (historyDrawer) {
+        historyDrawer.style.display = "none";
+        historyDrawer.classList.remove("open");
+      }
     });
-    el.historyList.appendChild(div);
+    historyList.appendChild(div);
   });
 }
 

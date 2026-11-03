@@ -1,8 +1,7 @@
-/* styles.css - Astria Nano-Banana V2 Authentic Theme */
-/* Pixel-accurate replication of Astria Nano-Banana Photoshop plugin */
+/* styles.css - Astria Nano-Banana V2 Authentic Theme for Photoshop UXP */
 
 :root {
-  --bg-app: #1a1a1a;
+  --bg-app: #181818;
   --bg-card: #262626;
   --bg-card-hover: #2d2d2d;
   --bg-input: #1f1f1f;
@@ -49,6 +48,17 @@ html, body {
   user-select: none;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+/* Base button override to prevent UXP host style interference */
+button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 /* Custom Scrollbar */
@@ -126,23 +136,23 @@ html, body {
 }
 
 .pill-btn {
-  background: var(--bg-pill);
-  border: 1px solid var(--border-pill);
-  color: var(--text-main);
+  background: var(--bg-pill) !important;
+  border: 1px solid var(--border-pill) !important;
+  color: var(--text-main) !important;
   font-size: 11px;
   font-weight: 500;
-  padding: 4px 9px;
-  border-radius: var(--radius-pill);
+  padding: 5px 10px;
+  border-radius: var(--radius-pill) !important;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .pill-btn:hover {
-  background: var(--bg-pill-hover);
-  border-color: #555555;
+  background: var(--bg-pill-hover) !important;
+  border-color: #555555 !important;
 }
 
 .pill-btn:active {
@@ -152,13 +162,13 @@ html, body {
 .dropdown-caret {
   font-size: 9px;
   color: var(--text-muted);
-  margin-left: 1px;
+  margin-left: 2px;
 }
 
 .avatar-pill {
-  background: var(--bg-pill);
-  border: 1px solid var(--border-pill);
-  border-radius: var(--radius-pill);
+  background: var(--bg-pill) !important;
+  border: 1px solid var(--border-pill) !important;
+  border-radius: var(--radius-pill) !important;
   padding: 3px 6px 3px 4px;
   display: flex;
   align-items: center;
@@ -168,18 +178,18 @@ html, body {
 }
 
 .avatar-pill:hover {
-  background: var(--bg-pill-hover);
+  background: var(--bg-pill-hover) !important;
 }
 
 .avatar-circle {
-  width: 18px;
-  height: 18px;
+  width: 19px;
+  height: 19px;
   border-radius: 50%;
-  background: #dc2626;
-  color: #ffffff;
-  font-size: 10.5px;
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  font-size: 11px;
   font-weight: 700;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }
@@ -431,7 +441,7 @@ input:checked + .slider:before {
   position: relative;
   background: #181818;
   border: 1px solid #3d3d3d;
-  display: none; /* Shown dynamically when selection or image exists */
+  display: none;
   flex-shrink: 0;
 }
 
@@ -447,8 +457,8 @@ input:checked + .slider:before {
   position: absolute;
   top: -5px;
   left: -5px;
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #3f3f46;
   border: 1px solid #52525b;
@@ -470,23 +480,23 @@ input:checked + .slider:before {
   width: 64px;
   height: 64px;
   border-radius: var(--radius-thumb);
-  border: 1px dashed #4b4b4b;
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed #4b4b4b !important;
+  background: rgba(255, 255, 255, 0.02) !important;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
   cursor: pointer;
   transition: var(--transition);
   flex-shrink: 0;
 }
 
 .add-image-card:hover {
-  border-color: #71717a;
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
+  border-color: #71717a !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
 }
 
 .add-image-card:active {
@@ -507,10 +517,10 @@ input:checked + .slider:before {
 
 .prompt-textarea {
   width: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #ffffff;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #ffffff !important;
   font-family: inherit;
   font-size: 14.5px;
   font-weight: 500;
@@ -546,7 +556,7 @@ input:checked + .slider:before {
   border: 1px solid #3a3a3a;
   color: #d4d4d8;
   font-size: 9.5px;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 12px;
   cursor: pointer;
   transition: var(--transition);
@@ -559,8 +569,8 @@ input:checked + .slider:before {
 
 /* Result / Status Notification Banner */
 .result-banner {
-  background: var(--success-bg);
-  border: 1px solid var(--success-border);
+  background: var(--success-bg) !important;
+  border: 1px solid var(--success-border) !important;
   border-radius: 10px;
   padding: 7px 10px;
   display: flex;
@@ -583,32 +593,31 @@ input:checked + .slider:before {
 .result-text {
   font-size: 11px;
   font-weight: 500;
-  color: var(--success-text);
+  color: var(--success-text) !important;
   line-height: 1.35;
   word-break: break-word;
 }
 
-/* Error / Info banner states */
 .result-banner.error {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
 }
 .result-banner.error .banner-icon-wrap {
   color: #f87171;
 }
 .result-banner.error .result-text {
-  color: #fca5a5;
+  color: #fca5a5 !important;
 }
 
 .result-banner.info {
-  background: rgba(56, 189, 248, 0.12);
-  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
 }
 .result-banner.info .banner-icon-wrap {
   color: #38bdf8;
 }
 .result-banner.info .result-text {
-  color: #bae6fd;
+  color: #bae6fd !important;
 }
 
 /* =========================================
@@ -636,13 +645,13 @@ input:checked + .slider:before {
 }
 
 .toolbar-pill {
-  background: var(--bg-pill);
-  border: 1px solid var(--border-pill);
-  color: #e4e4e7;
+  background: var(--bg-pill) !important;
+  border: 1px solid var(--border-pill) !important;
+  color: #e4e4e7 !important;
   font-size: 11px;
   font-weight: 500;
   padding: 5px 8px;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-pill) !important;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -652,9 +661,9 @@ input:checked + .slider:before {
 }
 
 .toolbar-pill:hover {
-  background: var(--bg-pill-hover);
-  border-color: #555555;
-  color: #ffffff;
+  background: var(--bg-pill-hover) !important;
+  border-color: #555555 !important;
+  color: #ffffff !important;
 }
 
 .toolbar-pill:active {
@@ -662,12 +671,12 @@ input:checked + .slider:before {
 }
 
 .toolbar-icon-btn {
-  background: var(--bg-pill);
-  border: 1px solid var(--border-pill);
-  color: #e4e4e7;
+  background: var(--bg-pill) !important;
+  border: 1px solid var(--border-pill) !important;
+  color: #e4e4e7 !important;
   width: 27px;
   height: 27px;
-  border-radius: 50%;
+  border-radius: 50% !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -677,9 +686,9 @@ input:checked + .slider:before {
 }
 
 .toolbar-icon-btn:hover {
-  background: var(--bg-pill-hover);
-  border-color: #555555;
-  color: #ffffff;
+  background: var(--bg-pill-hover) !important;
+  border-color: #555555 !important;
+  color: #ffffff !important;
 }
 
 .toolbar-icon-btn:active {
@@ -694,10 +703,10 @@ input:checked + .slider:before {
   background: #242424;
   border: 1px solid #3d3d3d;
   border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
   padding: 4px;
   min-width: 175px;
-  z-index: 1000;
+  z-index: 9999;
   display: none;
 }
 
@@ -731,7 +740,7 @@ input:checked + .slider:before {
 }
 
 .menu-item.active {
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(245, 158, 11, 0.2);
   color: var(--banana-yellow);
   font-weight: 600;
 }
@@ -746,10 +755,10 @@ input:checked + .slider:before {
    DISTINCTIVE WHITE SEND PILL (↑ ▾)
    ========================================= */
 .btn-send-pill {
-  background: #ffffff;
-  color: #000000;
-  border: none;
-  border-radius: 20px;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: none !important;
+  border-radius: 20px !important;
   padding: 6px 14px;
   display: flex;
   align-items: center;
@@ -759,10 +768,12 @@ input:checked + .slider:before {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   transition: var(--transition);
   flex-shrink: 0;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
 
 .btn-send-pill:hover:not(:disabled) {
-  background: #f4f4f5;
+  background: #f4f4f5 !important;
   transform: scale(1.03);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
@@ -772,8 +783,8 @@ input:checked + .slider:before {
 }
 
 .btn-send-pill:disabled {
-  background: #52525b;
-  color: #a1a1aa;
+  background: #52525b !important;
+  color: #a1a1aa !important;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -857,20 +868,20 @@ input:checked + .slider:before {
 }
 
 .btn-secondary {
-  background: #333;
-  color: #d4d4d8;
+  background: #333 !important;
+  color: #d4d4d8 !important;
 }
 .btn-secondary:hover {
-  background: #444;
+  background: #444 !important;
 }
 
 .btn-primary {
-  background: var(--banana-accent);
-  color: #000;
+  background: var(--banana-accent) !important;
+  color: #000 !important;
   font-weight: 600;
 }
 .btn-primary:hover {
-  background: var(--banana-yellow);
+  background: var(--banana-yellow) !important;
 }
 
 /* =========================================
