@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nano Banana Pro</title>
+    <script>
+      if (!window.uxpHost && window.parent && window.parent !== window) {
+        window.uxpHost = {
+          postMessage: function(msg) {
+            try { window.parent.postMessage(msg, "*"); } catch(e) {
+              console.error("Failed to post message to host:", e);
+            }
+          }
+        };
+      }
+    </script>
+    <script defer src="./assets/app.js"></script>
+    <link rel="stylesheet" href="./assets/index.css">
+  </head>
+  <body>
+    <div id="boot-status" style="box-sizing:border-box;padding:16px;color:#b4b4b4;font:12px system-ui,sans-serif;">Loading Nano Banana Pro…</div>
+    <div id="root"></div>
+    <script>
+      window.addEventListener("error", function (event) {
+        var status = document.getElementById("boot-status");
+        if (status) status.textContent = "UI startup error: " + (event.message || "Unknown WebView error");
+      });
+      window.addEventListener("unhandledrejection", function (event) {
+        var status = document.getElementById("boot-status");
+        var reason = event.reason && event.reason.message ? event.reason.message : String(event.reason || "Unknown WebView error");
+        if (status) status.textContent = "UI startup error: " + reason;
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,10 @@
+# Third-party notices
+
+## photoshop-types
+
+The agent tool catalog's Photoshop layer-effect vocabulary is derived from
+[`simonhenke/photoshop-types`](https://github.com/simonhenke/photoshop-types),
+copyright Simon Henke and contributors, licensed under the MIT License.
+
+The upstream license is available at
+<https://github.com/simonhenke/photoshop-types/blob/main/LICENSE>.

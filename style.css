@@ -1,0 +1,235 @@
+html, body {
+  width: 100vw;
+  height: 100vh;
+  min-width: 230px;
+  min-height: 230px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#app-webview {
+  flex: 1 1 auto;
+  min-width: 230px;
+  min-height: 230px;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+#legacy-ui {
+  padding: 1rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.legacy-ui--hidden {
+  display: none;
+}
+
+.webview-fallback-notice {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+sp-textfield, sp-textarea {
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+sp-menu, sp-picker {
+  width: 100%;
+}
+
+/* Utility classes  */
+.hidden {
+  display: none;
+}
+
+/* Prompt container with reference images */
+.prompt-container {
+  position: relative;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+.prompt-container sp-textarea {
+  border: none;
+  height: 5rem;
+}
+
+.reference-images-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.reference-images-section sp-button {
+  width: auto;
+  align-self: flex-start;
+}
+
+.reference-buttons {
+  display: flex;
+  align-items: center;
+}
+.reference-buttons>* {
+  margin-right: 0.5rem;
+}
+
+#use-foreground.active {
+  background-color: #007acc !important;
+  border-color: #007acc !important;
+  color: white !important;
+}
+
+#use-foreground.active svg {
+  fill: white !important;
+}
+
+.thumbnails-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.thumbnail-item {
+  margin-top: 0.75rem;
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #444;
+}
+
+.thumbnail-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 12px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.thumbnail-item:hover .thumbnail-remove {
+  display: flex;
+}
+
+.thumbnail-remove:hover {
+  background: rgba(180, 180, 180, 0.3);
+}
+
+/* Footer enhancements using Spectrum tokens where available */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0 12px;
+}
+.footer sp-link {
+  color: #AAA;
+  text-decoration: none;
+}
+
+.form-actions {
+  line-height: 1rem;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row-reverse;
+}
+.form-actions sp-button {
+  margin-right: 0.5rem;
+}
+
+/* Prompt History */
+.prompt-history-container {
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.prompt-history-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #444;
+  background: #333;
+}
+
+.prompt-history-list {
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.prompt-history-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prompt-history-item:hover {
+  background: #3a3a3a;
+}
+
+.prompt-history-item:last-child {
+  border-bottom: none;
+}
+
+/* Layout */
+.row {
+  --bs-gutter-x: 1.5rem;
+  display: flex;
+  margin-right: calc(-0.5 * 1.5rem);
+  margin-left: calc(-0.5 * 1.5rem);
+}
+.col {
+  flex: 1;
+  padding-right: calc(1.5rem * 0.5);
+  padding-left: calc(1.5rem * 0.5);
+}
+
+/* Keep both native WebViews attached while switching between them. UXP can
+   recreate a display:none WebView when it is shown again, losing the page's
+   message listener (and the composer's draft). Overlay the views so a hidden
+   one keeps its size without taking space from the visible one. */
+#app-webview,
+#chat-webview {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#chat-webview.chat-webview--hidden,
+#app-webview.app-webview--hidden {
+  visibility: hidden;
+}

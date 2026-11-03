@@ -1,364 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Nano-Banana</title>
-  <link rel="stylesheet" href="styles.css" />
-  <style>
-    /* Direct fallback styling to guarantee instant layout in Photoshop UXP */
-    :root {
-      --bg-app: #181818;
-      --bg-card: #262626;
-      --bg-card-hover: #2d2d2d;
-      --bg-input: #1f1f1f;
-      --bg-pill: #333333;
-      --bg-pill-hover: #3e3e3e;
-      --border-card: #343434;
-      --border-pill: #424242;
-      --border-subtle: #2d2d2d;
-      --text-main: #f4f4f5;
-      --text-muted: #9ca3af;
-      --text-dim: #6b7280;
-      --banana-accent: #f59e0b;
-      --banana-yellow: #fbbf24;
-      --success-bg: #0f291e;
-      --success-border: #14532d;
-      --success-text: #6ee7b7;
-      --success-icon: #34d399;
-      --radius-pill: 20px;
-      --radius-card: 16px;
-      --radius-thumb: 12px;
-      --radius-sm: 8px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%; height: 100%;
-      background-color: #181818; color: #f4f4f5;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 12px; user-select: none; overflow-x: hidden; overflow-y: auto;
-    }
-    [role="button"] { cursor: pointer; user-select: none; }
-    [role="button"] * { pointer-events: none; }
-    .menu-item { pointer-events: auto; }
-    .style-chip { pointer-events: auto; }
-    .settings-drawer input, .settings-drawer a, .settings-drawer label { pointer-events: auto; }
-    .custom-modal-backdrop input, .custom-modal-backdrop [role="button"] { pointer-events: auto; }
-    .nano-app-container { width: 100%; max-width: 500px; margin: 0 auto; padding: 10px 12px 16px 12px; display: flex; flex-direction: column; }
-    .nano-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .header-brand { display: flex; align-items: center; gap: 8px; }
-    .brand-name { font-size: 13px; font-weight: 600; color: #ffffff; }
-    .brand-version { font-size: 10px; color: #6b7280; }
-    .header-controls { display: flex; align-items: center; gap: 6px; }
-    .pill-btn { background-color: #333333; border: 1px solid #424242; color: #f4f4f5; font-size: 11px; font-weight: 500; padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
-    .avatar-pill { background-color: #333333; border: 1px solid #424242; border-radius: 20px; padding: 3px 6px 3px 4px; display: flex; align-items: center; gap: 3px; cursor: pointer; }
-    .avatar-circle { width: 19px; height: 19px; border-radius: 50%; background-color: #dc2626; color: #ffffff; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
-    .settings-drawer, .history-drawer { display: none; background-color: #262626; border: 1px solid #343434; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
-    .drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .drawer-title { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #9ca3af; }
-    .link-get-key { color: #fbbf24; text-decoration: none; font-size: 10px; font-weight: 600; }
-    .clean-input { width: 100%; background-color: #1f1f1f; border: 1px solid #2d2d2d; border-radius: 8px; padding: 7px 9px; color: #ffffff; font-size: 11.5px; outline: none; }
-    .nano-main-card { background-color: #262626; border: 1px solid #343434; border-radius: 16px; padding: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
-    .image-tray { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .thumbnail-card { width: 64px; height: 64px; border-radius: 12px; position: relative; background-color: #181818; border: 1px solid #3d3d3d; display: none; }
-    .thumbnail-card img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; display: block; }
-    .btn-remove-thumb { position: absolute; top: -5px; left: -5px; width: 18px; height: 18px; border-radius: 50%; background-color: #3f3f46; border: 1px solid #52525b; color: #fff; font-size: 9px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .add-image-card { width: 64px; height: 64px; border-radius: 12px; border: 1px dashed #4b4b4b; background-color: rgba(255,255,255,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #9ca3af; cursor: pointer; }
-    .prompt-textarea { width: 100%; background: transparent; border: none; outline: none; color: #ffffff; font-size: 14.5px; font-weight: 500; min-height: 48px; resize: vertical; }
-    .result-banner { background-color: #0f291e; border: 1px solid #14532d; border-radius: 10px; padding: 7px 10px; display: flex; align-items: center; gap: 7px; margin-bottom: 12px; }
-    .result-text { font-size: 11px; font-weight: 500; color: #6ee7b7; }
-    .toolbar-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
-    .toolbar-left-pills { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; flex: 1; }
-    .toolbar-pill { background-color: #333333; border: 1px solid #424242; color: #e4e4e7; font-size: 11px; font-weight: 500; padding: 5px 8px; border-radius: 20px; display: flex; align-items: center; gap: 4px; cursor: pointer; white-space: nowrap; }
-    .toolbar-icon-btn { background-color: #333333; border: 1px solid #424242; color: #e4e4e7; width: 27px; height: 27px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-    .btn-send-pill { background-color: #ffffff !important; color: #000000 !important; border: none; border-radius: 20px; padding: 6px 14px; display: flex; align-items: center; justify-content: center; gap: 3px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
-    .arrow-icon { font-size: 15px; font-weight: 800; color: #000000; }
-    .pill-menu { position: absolute; bottom: calc(100% + 6px); left: 0; background-color: #242424; border: 1px solid #3d3d3d; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.7); padding: 4px; min-width: 175px; z-index: 9999; display: none; }
-    .menu-item { padding: 6px 10px; font-size: 11px; color: #d4d4d8; border-radius: 6px; cursor: pointer; }
-    .menu-item:hover { background-color: #333333; color: #fff; }
-    .menu-item.active { background-color: rgba(245, 158, 11, 0.2); color: #fbbf24; font-weight: 600; }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="pngEncoder.min.js"></script>
+  <script src="colorProfile.min.js"></script>
+  <script src="generationBounds.min.js"></script>
+  <script src="layeredComposition.min.js"></script>
+  <script src="videoHandoff.min.js"></script>
+  <script src="geminiSdk.min.js"></script>
+  <script src="astriaSdk.min.js"></script>
+  <script src="oauth.min.js"></script>
+  <script src="auth.min.js"></script>
+  <script src="workspaces.min.js"></script>
+  <script src="authGeminiDirect.min.js"></script>
+  <script src="promptHistory.min.js"></script>
+  <script src="main.min.js"></script>
+  <script src="photoshopToolCatalog.min.js"></script>
+  <script src="photoshopScripting.min.js"></script>
+  <script src="photoshopTools.min.js"></script>
+  <script src="webviewBridge.min.js"></script>
 </head>
 <body>
-  <div class="nano-app-container">
+  <webview id="app-webview" src="plugin:/webview/index.html" width="100vw" height="100vh"></webview>
+  
+  <webview id="chat-webview" width="100vw" height="100vh" class="chat-webview--hidden"></webview>
+  <div id="legacy-ui" class="legacy-ui--hidden">
+  <sp-body>
     
-    <!-- Top Header Bar -->
-    <header class="nano-header">
-      <div class="header-brand">
-        <!-- Astria Logo Icon (Wave Gradient) -->
-        <div class="astria-logo-badge">
-          <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-            <rect width="32" height="32" rx="8" fill="#18181b"/>
-            <path d="M6 21C9 14 13 14 16 19C19 24 23 24 26 17" stroke="url(#astria-grad-1)" stroke-width="3" stroke-linecap="round"/>
-            <path d="M6 15C9 9 13 9 16 14C19 19 23 19 26 12" stroke="url(#astria-grad-2)" stroke-width="3" stroke-linecap="round"/>
-            <defs>
-              <linearGradient id="astria-grad-1" x1="6" y1="21" x2="26" y2="17" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#f97316"/>
-                <stop offset="0.5" stop-color="#facc15"/>
-                <stop offset="1" stop-color="#06b6d4"/>
-              </linearGradient>
-              <linearGradient id="astria-grad-2" x1="6" y1="15" x2="26" y2="12" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#ec4899"/>
-                <stop offset="0.5" stop-color="#f97316"/>
-                <stop offset="1" stop-color="#3b82f6"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <div class="header-titles">
-          <span class="brand-name">Astria Nano Banan...</span>
-          <span class="brand-version">v2.0.21</span>
-        </div>
-      </div>
+    <sp-detail class="webview-fallback-notice">
+      The full Astria panel could not start inside Photoshop. You can use this basic panel.
+      This startup check tests the installed panel's communication with Photoshop, not your Astria sign-in or internet connection.
+    </sp-detail>
+    <sp-detail id="webview-fallback-reason" class="webview-fallback-notice"></sp-detail>
+    <sp-detail id="webview-fallback-details" class="webview-fallback-notice"></sp-detail>
+    <sp-detail class="webview-fallback-notice">
+      Please email plugins@astria.ai a screenshot of these details and your operating system version.
+    </sp-detail>
+    <section id="auth">
+      <sp-heading size="S">Connect Astria Photoshop</sp-heading>
+      <sp-body>Sign in securely in your browser to connect your Astria account.</sp-body>
+      <sp-body id="oauth-status"></sp-body>
+      <sp-button id="submit-auth" variant="cta">Connect Astria</sp-button>
+      <sp-button id="cancel-auth" class="hidden" variant="secondary">Cancel sign-in</sp-button>
+    </section>
 
-      <div class="header-controls">
-        <!-- History Dropdown Pill -->
-        <div role="button" tabindex="0" class="pill-btn history-pill" id="btnHistoryToggle" title="Session Generation History">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <span>History</span>
-          <span class="dropdown-caret">▾</span>
+    <section id="main" class="hidden">
+      <form id="prompt-form">
+        <div class="row">
+          <div class="col" style="flex: 2;">
+            <sp-picker placeholder="Select a model">
+              <sp-menu id="model-select" slot="options"></sp-menu>
+            </sp-picker>
+          </div>
+
+          <div class="col">
+            <sp-picker placeholder="Select count">
+              <sp-menu id="num-images" slot="options">
+                <sp-menu-item value="1" selected>1</sp-menu-item>
+                <sp-menu-item value="2">2</sp-menu-item>
+                <sp-menu-item value="3">3</sp-menu-item>
+                <sp-menu-item value="4">4</sp-menu-item>
+                <sp-menu-item value="5">5</sp-menu-item>
+                <sp-menu-item value="6">6</sp-menu-item>
+                <sp-menu-item value="7">7</sp-menu-item>
+                <sp-menu-item value="8">8</sp-menu-item>
+              </sp-menu>
+            </sp-picker>
+          </div>
+        </div>
+        <div class="prompt-container">
+          <div id="reference-thumbnails" class="thumbnails-grid"></div>
+          <sp-textarea id="prompt-input" name="prompt" placeholder="Type prompt. 'Show me with red shoes' or 'Transform __from___ into ____' or 'Change ____'"></sp-textarea>
+          <div id="modifier-dropdown" style="margin-bottom: 0.5rem;">
+            <sp-picker id="modifier-version" placeholder="Select version">
+              <sp-menu slot="options"></sp-menu>
+            </sp-picker>
+          </div>
+          <div class="row">
+            <div class="col">
+              <sp-button id="reference-images" variant="secondary" size="s" quiet title="Add reference images"><svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></sp-button>
+
+              <sp-button id="use-foreground" variant="secondary" size="s" quiet title="Use foreground color">
+                <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18" fill="white">
+                  <rect id="Canvas" opacity="0" width="18" height="18"/>
+                  <path class="fill" opacity="0.2" d="M16,9a6.97651,6.97651,0,0,0-2.057-4.95L9,9Z"/>
+                  <path class="fill" opacity="0.33" d="M9,9l4.9595,4.9345A6.978,6.978,0,0,0,16,9Z"/>
+                  <path class="fill" opacity="0.47" d="M9,9v7a6.97752,6.97752,0,0,0,4.937-2.0435Z"/>
+                  <path class="fill" opacity="0.6" d="M9,16V9L4.05,13.9445A6.98,6.98,0,0,0,9,16Z"/>
+                  <path class="fill" opacity="0.7" d="M9,9H2a6.97949,6.97949,0,0,0,2.05,4.9445Z"/>
+                  <path class="fill" opacity="0.8" d="M9,9,4.045,4.061A6.9765,6.9765,0,0,0,2,9Z"/>
+                  <path class="fill"
+                        d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1ZM9,16A6.9955,6.9955,0,0,1,4.035,4.072L8.9695,9V2H9A7,7,0,0,1,9,16Z"/>
+                </svg>
+
+              </sp-button>
+              <sp-button id="use-layer" variant="secondary" size="s" quiet title="Use current layer">
+                <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18" fill="none">
+                  <path d="M15 12L9 16L3 12M15 8L9 12L3 8L9 4L15 8Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </sp-button>
+              <sp-button id="prompt-history-btn" variant="secondary" size="s" quiet title="Prompt history">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+                  <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                </svg>
+              </sp-button>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top: 1rem;">
+            <sp-button id="prompt-submit" type="submit" variant="cta">
+              Submit
+            </sp-button>
+          </div>
+
         </div>
 
-        <!-- User Profile / Settings Avatar Pill -->
-        <div role="button" tabindex="0" class="avatar-pill" id="btnSettingsToggle" title="OpenRouter API Key & Settings">
-          <span class="avatar-circle">S</span>
-          <span class="dropdown-caret">▾</span>
-        </div>
-      </div>
-    </header>
 
-    <!-- Settings Drawer (Revealed via Avatar 'S' button) -->
-    <div class="settings-drawer" id="settingsDrawer">
-      <div class="drawer-header">
-        <span class="drawer-title">OpenRouter API Configuration</span>
-        <a href="https://openrouter.ai/keys" target="_blank" class="link-get-key">Get Key ↗</a>
-      </div>
-      <div class="settings-body">
-        <div class="input-with-action">
-          <input
-            type="password"
-            id="apiKeyInput"
-            class="clean-input"
-            placeholder="OpenRouter API Key (sk-or-v1-...)"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <div role="button" tabindex="0" class="btn-icon-inside" id="btnToggleKeyVisibility" title="Show / Hide Key">👁</div>
-        </div>
+      </form>
 
-        <div class="setting-row">
-          <span class="setting-label">Layer Separation (Smart Object + Mask)</span>
-          <label class="switch">
-            <input type="checkbox" id="layerSeparationToggle" checked />
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="setting-row-vertical">
-          <span class="setting-label">Negative Prompt (Avoid)</span>
-          <input
-            type="text"
-            id="negativePromptInput"
-            class="clean-input text-sm"
-            placeholder="blurry, low quality, distorted, artifacts"
-            value="blurry, low quality, distorted, artifacts"
-          />
-        </div>
-
-        <div class="setting-footer">
-          <span class="save-indicator" id="saveIndicator">Saved</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- History Drawer (Revealed via 'History' button) -->
-    <div class="history-drawer" id="historyDrawer">
-      <div class="drawer-header">
-        <span class="drawer-title">Recent Edits (Session)</span>
-        <div role="button" tabindex="0" class="btn-clear-history" id="btnClearHistory">Clear</div>
-      </div>
-      <div class="history-list" id="historyList">
-        <div class="empty-history">No generations yet in this session.</div>
-      </div>
-    </div>
-
-    <!-- Main Unified AI Prompt Card (Matches Video Exactly) -->
-    <main class="nano-main-card">
       
-      <!-- Top Image Tray (Thumbnail + Add image button) -->
-      <div class="image-tray">
-        <!-- Active Selection / Reference Thumbnail -->
-        <div class="thumbnail-card" id="refThumbnailCard">
-          <img id="refThumbnailImg" src="" alt="Context" />
-          <div role="button" tabindex="0" class="btn-remove-thumb" id="btnRemoveThumb" title="Remove reference">✕</div>
+      <div id="prompt-history" class="hidden prompt-history-container">
+        <div class="prompt-history-header">
+          <sp-heading size="XS">Recent Prompts</sp-heading>
         </div>
-
-        <!-- Add image button -->
-        <div role="button" tabindex="0" class="add-image-card" id="btnAddImage" title="Add reference image or sync selection">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <rect x="3" y="3" width="18" height="18" rx="3"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-            <line x1="12" y1="8" x2="12" y2="14"/>
-            <line x1="9" y1="11" x2="15" y2="11"/>
-          </svg>
-          <span class="add-image-label">Add image</span>
-        </div>
-        <input type="file" id="fileInput" accept="image/png, image/jpeg, image/webp" style="display: none;" />
-      </div>
-
-      <!-- Prompt Text Area (Clean, borderless, seamless) -->
-      <div class="prompt-container">
-        <textarea
-          id="promptInput"
-          class="prompt-textarea"
-          rows="2"
-          placeholder="Replace the earring"
-          spellcheck="false"
-        >Replace the earring</textarea>
-      </div>
-
-      <!-- Quick Style Presets Drawer (Toggled by 🎨 palette button) -->
-      <div class="style-palette-drawer" id="stylePaletteDrawer">
-        <span class="style-chip" data-style="photorealistic, 8k, realistic lighting">Photoreal</span>
-        <span class="style-chip" data-style="seamless blend, match original environment">Seamless Blend</span>
-        <span class="style-chip" data-style="studio photography, high-end commercial">Studio</span>
-        <span class="style-chip" data-style="cyberpunk neon, cinematic octane">Cyberpunk</span>
-        <span class="style-chip" data-style="remove object, clean seamless inpaint">Clean Fill</span>
-      </div>
-
-      <!-- Result / Status Notification Banner (Green masked Smart Object pill) -->
-      <div class="result-banner" id="resultBanner">
-        <div class="banner-icon-wrap" id="bannerIcon">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
-        </div>
-        <span class="result-text" id="resultText">Result added to Photoshop as a masked Smart Object.</span>
-      </div>
-
-      <!-- Bottom Toolbar Row with Pills and White Send Button -->
-      <footer class="toolbar-row">
-        <div class="toolbar-left-pills">
+        <div id="prompt-history-list" class="prompt-history-list">
           
-          <!-- Model Selector Pill -->
-          <div class="pill-dropdown-wrap">
-            <div role="button" tabindex="0" class="toolbar-pill model-pill" id="btnModelPill">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-                <path d="M2 12h20"/>
-              </svg>
-              <span id="labelCurrentModel">GPT Image 2.5 Sunburst</span>
-              <span class="dropdown-caret">▾</span>
-            </div>
-            <div class="pill-menu" id="modelMenu">
-              <div class="menu-item active" data-model="openai/gpt-image-2.5-sunburst">GPT Image 2.5 Sunburst</div>
-              <div class="menu-item" data-model="google/gemini-nano-banana-2.1">Nano Banana 2.1</div>
-              <div class="menu-item" data-model="black-forest-labs/flux-3-image">FLUX 3 Image</div>
-              <div class="menu-item" data-model="openai/gpt-image-2">GPT Image 2</div>
-              <div class="menu-item" data-model="bytedance-seed/seedream-5-0-pro">Seedream 5.0 Pro</div>
-              <div class="menu-item" data-model="krea/k3-edit">Krea K3 Edit</div>
-              <div class="menu-item" data-model="recraft/recraft-v4.1">Recraft v4.1</div>
-              <div class="menu-item custom-choice" data-model="custom">Custom model...</div>
-            </div>
-          </div>
-
-          <!-- Variations / Quantity Pill -->
-          <div class="pill-dropdown-wrap">
-            <div role="button" tabindex="0" class="toolbar-pill count-pill" id="btnCountPill">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                <polyline points="2 17 12 22 22 17"/>
-                <polyline points="2 12 12 17 22 12"/>
-              </svg>
-              <span id="labelCount">1</span>
-              <span class="dropdown-caret">▾</span>
-            </div>
-            <div class="pill-menu compact" id="countMenu">
-              <div class="menu-item active" data-count="1">1 variation</div>
-              <div class="menu-item" data-count="2">2 variations</div>
-              <div class="menu-item" data-count="4">4 variations</div>
-            </div>
-          </div>
-
-          <!-- Resolution Pill -->
-          <div class="pill-dropdown-wrap">
-            <div role="button" tabindex="0" class="toolbar-pill res-pill" id="btnResPill">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-              </svg>
-              <span id="labelRes">2K</span>
-              <span class="dropdown-caret">▾</span>
-            </div>
-            <div class="pill-menu compact" id="resMenu">
-              <div class="menu-item" data-res="auto">Auto (Selection)</div>
-              <div class="menu-item" data-res="1K">1K (Standard)</div>
-              <div class="menu-item active" data-res="2K">2K (High Res)</div>
-              <div class="menu-item" data-res="4K">4K (Ultra HD)</div>
-            </div>
-          </div>
-
-          <!-- Quality / Creativity Pill -->
-          <div class="pill-dropdown-wrap">
-            <div role="button" tabindex="0" class="toolbar-pill quality-pill" id="btnQualityPill">
-              <span id="labelQuality">Medium</span>
-              <span class="dropdown-caret">▾</span>
-            </div>
-            <div class="pill-menu compact" id="qualityMenu">
-              <div class="menu-item" data-quality="Fast">Fast</div>
-              <div class="menu-item active" data-quality="Medium">Medium</div>
-              <div class="menu-item" data-quality="High">High Quality</div>
-            </div>
-          </div>
-
-          <!-- Style Palette Toggle Button -->
-          <div role="button" tabindex="0" class="toolbar-icon-btn" id="btnTogglePalette" title="Quick Style Modifiers">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
-              <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
-              <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
-              <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
-            </svg>
-          </div>
         </div>
+      </div>
 
-        <!-- Distinctive White Send Button Pill (↑ ▾) -->
-        <div role="button" tabindex="0" class="btn-send-pill" id="btnSendAction" title="Run Generative Edit">
-          <span class="spinner" id="sendSpinner"></span>
-          <span class="arrow-icon" id="sendArrow">↑</span>
-          <span class="arrow-caret" id="sendCaret">▾</span>
+      <sp-divider size="small"></sp-divider>
+      
+      <div id="stable-update-notification" class="hidden update-notification">
+        <sp-banner type="info">
+          A new stable version is available!
+          <sp-link href="https://www.astria.ai/nano-banana-photoshop/purchased?utm_source=photoshop_plugin&amp;utm_medium=plugin&amp;utm_campaign=update" target="_blank">Download update</sp-link>
+        </sp-banner>
+      </div>
+
+      <div id="beta-update-notification" class="hidden update-notification">
+        <sp-banner type="notice">
+          A new beta version is available!
+          <sp-link href="https://www.astria.ai/nano-banana-photoshop/purchased?utm_source=photoshop_plugin&amp;utm_medium=plugin&amp;utm_campaign=update" target="_blank">Download update</sp-link>
+        </sp-banner>
+      </div>
+
+      <footer role="contentinfo" class="footer">
+        <div class="footer__left">
+          <sp-detail>
+            <span id="user-email" class="user-email"></span>
+            (<span id="user-balance"></span>)
+            |
+            <sp-link id="add-balance" href="https://www.astria.ai/tunes/buy?utm_source=photoshop_plugin&amp;utm_medium=plugin&amp;utm_campaign=add_balance" target="_blank">Add balance</sp-link>
+            |
+            <sp-link id="signout" href="#">Logout</sp-link>
+            |
+            <sp-link id="signout-gemini" href="#" class="hidden">Logout Gemini Direct</sp-link>
+            <div>
+              <span>Made with <span aria-label="love">❤️</span> by <sp-link href="https://www.astria.ai/?utm_source=photoshop_plugin&amp;utm_medium=plugin&amp;utm_campaign=footer" target="_blank">Astria</sp-link> | <span id="plugin-version"></span></span>
+            </div>
+          </sp-detail>
         </div>
       </footer>
-    </main>
+    </section>
 
-    <!-- Custom Model Modal Dialog -->
-    <div class="custom-modal-backdrop" id="customModelModal" style="display: none;">
-      <div class="custom-modal-box">
-        <div class="custom-modal-title">Enter Custom OpenRouter Model</div>
-        <input
-          type="text"
-          id="customModelInput"
-          class="clean-input"
-          placeholder="e.g. black-forest-labs/flux-1-schnell"
-        />
-        <div class="custom-modal-actions">
-          <div role="button" tabindex="0" class="btn-secondary" id="btnCancelCustom">Cancel</div>
-          <div role="button" tabindex="0" class="btn-primary" id="btnApplyCustom">Apply</div>
-        </div>
+    <section id="gemini-api-key-section" class="hidden">
+      <sp-heading size="S">Gemini API Key Setup</sp-heading>
+      <sp-body>
+        To use Direct Gemini 2.5 model, you need to get a free API key from Google AI Studio.
+      </sp-body>
+      <sp-link href="https://aistudio.google.com/apps" target="_blank">Open Google AI Studio</sp-link>
+      <sp-body>
+        Once there, you can get an API key at the bottom left of the screen using the "Get API key" button.
+      </sp-body>
+      <sp-field-label for="gemini-api-key-input">Enter Gemini API key</sp-field-label>
+      <sp-textfield id="gemini-api-key-input" name="geminiApiKey" placeholder="Paste Gemini API key" autocomplete="off"></sp-textfield>
+      <div class="button-group form-actions">
+        <sp-button id="submit-gemini-auth" variant="cta">Save</sp-button>
+        <sp-button id="cancel-gemini-auth" variant="secondary">Cancel</sp-button>
       </div>
-    </div>
+    </section>
 
+  </sp-body>
   </div>
-
-  <!-- Scripts -->
-  <script src="api.js"></script>
-  <script src="main.js"></script>
 </body>
 </html>

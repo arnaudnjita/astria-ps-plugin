@@ -1,76 +1,72 @@
-# Astria AI Generative Fill for Adobe Photoshop (UXP)
+# Astria Nano-Banana Pro (Re-engineered with OpenRouter AI)
 
-A native Adobe Photoshop UXP panel plugin replicating an AI generative-fill workflow (similar to Nano Banana Pro 2) powered by **OpenRouter's Image Generation API**.
-
----
-
-## ✨ Features
-
-- **OpenRouter Image Generation API**: Targets `https://openrouter.ai/api/v1/images` using unified standard request shapes, bearer token authentication, and app identification headers (`HTTP-Referer`, `X-Title`).
-- **Flexible Model Selection**:
-  - `google/nano-banana-2-flash-image` (default)
-  - `google/nano-banana`
-  - `openai/gpt-image-2`
-  - **Custom Model**: Type any supported OpenRouter image model slug directly (e.g. `black-forest-labs/flux-1-schnell`).
-- **Native Photoshop Marquee Selection Detection**: Automatically detects active document dimensions and bounding box coordinates of any active selection (Rectangular Marquee, Lasso, etc.).
-- **Photoshop Imaging API**: Extracts selected pixel regions directly via `photoshop.imaging.getPixels` and compresses them to PNG format via `encodeImageData` for image-to-image conditioning.
-- **Smart Placement & Alignment**: Uses `photoshop.action.batchPlay` and `placeEvent` inside `photoshop.core.executeAsModal` to create a new layer above the active layer and mathematically scale and align it to the original selection bounds.
-- **Reference Image Support**: Upload local reference/conditioning images (`input_references`) or automatically condition generation using the active selection.
-- **Aspect Ratio Auto-Calculation**: Dynamically calculates the optimal aspect ratio (`1:1`, `4:3`, `3:4`, `16:9`, `9:16`) based on the active selection dimensions.
-- **Photoshop Dark Mode UI**: Styled to match Photoshop's native workspace with live document status, prompt presets, API key obfuscation, and progress feedback.
+A 100% authentic Photoshop plugin re-engineered using REA (Reverse Engineer Anything) from the official Astria Nano-Banana CCX package (`v2.0.56`). Retains the exact sleek UI and UX from the demo video while routing all image generation models through **OpenRouter's Unified Image Generation API**.
 
 ---
 
-## 📁 Project Structure
+## ✨ Highlights & Architecture
+
+- **Pixel-Perfect Authentic UI**: Runs the genuine Nano-Banana Pro v2 React 18, Radix UI, Lucide icons, and Tailwind styling inside an embedded Photoshop `<webview>` panel.
+- **Astria OAuth Decoupled**: Completely bypasses Astria cloud authentication. No Astria account or subscription required.
+- **Direct OpenRouter Integration**: Powered by `https://openrouter.ai/api/v1/images` with instant API key storage in UXP Secure Storage.
+- **Top 6 Premier Image Models + 60+ Extended Catalog**:
+  1. **GPT Image 2.5 Sunburst** (`openai/gpt-image-2.5`)
+  2. **Nano-Banana 2.1 Pro** (`google/gemini-2.0-flash-exp:free`)
+  3. **FLUX.3 Pro** (`black-forest-labs/flux-1.1-pro`)
+  4. **Seedream 5.0 Pro** (`bytedance-seed/seedream-4.5`)
+  5. **Recraft V4.1 Vector & 2D** (`recraft/recraft-20b`)
+  6. **Krea 3.0 Realtime Edit** (`krea/k3-edit`)
+  - *Extended*: GPT Image 2, Riverflow 2.6 Pro, Midjourney v6.1, SD 3.5 Large, and more!
+- **Photoshop Non-Destructive Workflow**:
+  - Automatically captures document selection bounds and aspect ratios.
+  - Places generated images as non-destructive **Smart Objects**.
+  - Applies automated **Reveal Selection Layer Masks** matching Photoshop's native Generative Fill.
+  - Names layer with prompt description and records full prompt history.
+
+---
+
+## 📁 Repository Structure
 
 ```
 Astria PS Plugin/
-├── manifest.json       # UXP Manifest v5 configured for PS >= 24.0, domain: https://openrouter.ai
-├── index.html          # Clean dark-mode panel interface with OpenRouter model selector
-├── styles.css          # Photoshop-native dark UI styling & animations
-├── main.js             # Core Photoshop workflow logic, batchPlay & executeAsModal
-├── api.js              # OpenRouter API client (POST https://openrouter.ai/api/v1/images)
-├── icons/              # Plugin icons for Photoshop panel toolbar
-│   ├── icon-23.png
-│   └── icon-48.png
-└── README.md           # Documentation and setup guide
+├── manifest.json              # UXP Manifest v5 (<webview> with localAndRemote bridge)
+├── index.html                 # Photoshop UXP Host document mounting the WebView
+├── style.css                  # Host view styles
+├── webview/                   # Authentic React 18 + Tailwind frontend
+│   ├── index.html             # WebView entrypoint
+│   └── assets/
+│       ├── app.js             # React bundle with Radix UI, Lucide, OpenRouter dialog
+│       └── index.css          # Tailwind & dark theme styling
+├── webviewBridge.min.js       # Protocol 1 RPC bridge connecting WebView to Photoshop
+├── geminiSdk.min.js           # OpenRouter image generation engine & key management
+├── auth.min.js                # Instant authentication provider
+├── main.min.js                # Photoshop imaging, selection bounds, Smart Object placement
+├── layeredComposition.min.js  # Layered mask & composition planner
+├── promptHistory.min.js       # Starred prompts and prompt history manager
+└── icons/                     # High-DPI dark and light toolbar icons
 ```
 
 ---
 
-## 🚀 Quick Start Guide (How to Load in Photoshop)
+## 🚀 Quick Setup & Usage in Photoshop
 
-### Prerequisites
+### 1. Requirements
+* **Adobe Photoshop 2024–2026** (v24.0+).
+* **Adobe UXP Developer Tool (UDT)** (available free via Creative Cloud Desktop under *Apps > Developer tools*).
+* An **OpenRouter API Key** from [openrouter.ai/keys](https://openrouter.ai/keys).
 
-1. **Adobe Photoshop 2023 or newer** (v24.0+).
-2. **Adobe UXP Developer Tool (UDT)**:
-   - Install the free **UXP Developer Tool** from the Creative Cloud Desktop app (under *Apps > Categories > Developer tools*).
-3. **OpenRouter API Key**:
-   - Get your API key from [OpenRouter Keys](https://openrouter.ai/keys).
+### 2. Loading the Plugin
+1. Open the **Adobe UXP Developer Tool (UDT)**.
+2. Click **Add Plugin** in the top right.
+3. Select `manifest.json` located in `Astria PS Plugin/manifest.json`.
+4. In UDT, find **Astria Nano-Banana**, click `•••`, and choose **Load** (or **Reload**).
+5. In Photoshop, open **Plugins > Astria Nano-Banana > Astria Nano-Banana**.
+6. Dock the panel anywhere in your Photoshop workspace.
 
-### Loading the Plugin
-
-1. Launch **Adobe Photoshop**.
-2. Open the **UXP Developer Tool (UDT)**.
-3. Click **Add Plugin** in the top right.
-4. Select the `manifest.json` file inside this directory (`Astria PS Plugin/manifest.json`).
-5. In UDT, find **Astria AI Generative Fill**, click the `•••` actions menu, and select **Load** (or **Watch** during development).
-6. In Photoshop, open the panel via:
-   **Plugins > Astria AI Generative Fill > AI Generative Fill**
-7. Dock the panel anywhere in your Photoshop workspace.
-
----
-
-## 🎨 How to Use
-
-1. **Enter API Key**: Paste your OpenRouter API key (`sk-or-v1-...`) in the top field. It is saved in `localStorage`.
-2. **Select Model**: Choose from `google/nano-banana-2-flash-image`, `google/nano-banana`, `openai/gpt-image-2`, or choose **Custom model...** to enter your own model slug.
-3. **Open an Image**: Open any photo or create a canvas in Photoshop.
-4. **Make a Selection**: Use the **Rectangular Marquee Tool (M)** or **Lasso Tool (L)** to select an area you want to fill or modify.
-   - The panel indicator will reflect the active selection coordinates (e.g. `Selection Active (512 × 512px)`).
-5. **Enter Prompt**: Describe what you want generated.
-6. **Click '✨ Generate to New Layer'**:
-   - The plugin exports the selected area pixels via `photoshop.imaging`.
-   - Sends the request to `https://openrouter.ai/api/v1/images`.
-   - Creates a new layer above your active layer via `batchPlay`.
-   - Aligns and scales the generated image to fit the bounding box.
+### 3. Generating Images
+1. On first load, paste your OpenRouter API Key (`sk-or-v1-...`) in the key dialog and click **Save key**.
+2. Make any selection on your canvas (using Rectangular Marquee `M` or Lasso `L`).
+3. (Optional) Drag reference images into the reference tray or click **Add image**.
+4. Type your prompt (e.g., *"Replace the earring with an ornate diamond drop earring"*).
+5. Click the white generate pill button **`↑`** (or press `Ctrl+Enter` / `Cmd+Enter`).
+6. The generated image will appear in your document as a **masked Smart Object**!
