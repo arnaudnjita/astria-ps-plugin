@@ -35,6 +35,9 @@
     </sp-detail>
     <sp-detail id="webview-fallback-reason" class="webview-fallback-notice"></sp-detail>
     <sp-detail id="webview-fallback-details" class="webview-fallback-notice"></sp-detail>
+    <div style="margin: 8px 0 12px 0;">
+      <sp-button id="retry-webview-btn" variant="accent" size="m">Reload Astria Panel</sp-button>
+    </div>
     <sp-detail class="webview-fallback-notice">
       Please email plugins@astria.ai a screenshot of these details and your operating system version.
     </sp-detail>
@@ -165,16 +168,16 @@
     </section>
 
     <section id="gemini-api-key-section" class="hidden">
-      <sp-heading size="S">Gemini API Key Setup</sp-heading>
+      <sp-heading size="S">OpenRouter API Key Setup</sp-heading>
       <sp-body>
-        To use Direct Gemini 2.5 model, you need to get a free API key from Google AI Studio.
+        To access models like GPT Image 2.5, Gemini 2.5 Flash, FLUX.1, etc., enter your OpenRouter API key.
       </sp-body>
-      <sp-link href="https://aistudio.google.com/apps" target="_blank">Open Google AI Studio</sp-link>
+      <sp-link href="https://openrouter.ai/settings/keys" target="_blank">Get OpenRouter API Key</sp-link>
       <sp-body>
-        Once there, you can get an API key at the bottom left of the screen using the "Get API key" button.
+        Create an API key in your OpenRouter settings, then paste it below.
       </sp-body>
-      <sp-field-label for="gemini-api-key-input">Enter Gemini API key</sp-field-label>
-      <sp-textfield id="gemini-api-key-input" name="geminiApiKey" placeholder="Paste Gemini API key" autocomplete="off"></sp-textfield>
+      <sp-field-label for="gemini-api-key-input">Enter OpenRouter API key</sp-field-label>
+      <sp-textfield id="gemini-api-key-input" name="geminiApiKey" placeholder="sk-or-v1-..." autocomplete="off"></sp-textfield>
       <div class="button-group form-actions">
         <sp-button id="submit-gemini-auth" variant="cta">Save</sp-button>
         <sp-button id="cancel-gemini-auth" variant="secondary">Cancel</sp-button>
